@@ -2,12 +2,9 @@ from quart import Blueprint, request, jsonify
 from passlib.hash import bcrypt
 import jwt
 import datetime
-from app.utils.security import verify_token
-
+from app.config import SECRET_KEY
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api")
-
-SECRET_KEY = "your-very-secret-key"
 
 # Dummy user
 users = {
@@ -16,6 +13,8 @@ users = {
 
 @auth_bp.route("/login", methods=["POST"])
 async def login():
+    from app.utils.security import verify_token
+
     data = await request.get_json()
     email = data.get("email")
     password = data.get("password")
@@ -36,6 +35,7 @@ async def login():
 
 @auth_bp.route("/protected", methods=["GET"])
 async def protected():
+    from app.utils.security import verify_token
     payload, error_response, status = verify_token(request)
     if error_response:
         return jsonify(error_response), status
