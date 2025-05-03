@@ -9,23 +9,23 @@ SECRET_KEY = "your-very-secret-key"
 
 # Dummy user
 users = {
-    "admin": bcrypt.hash("password123")
+    "admin@example.com": bcrypt.hash("password123")
 }
 
 @auth_bp.route("/login", methods=["POST"])
 async def login():
     data = await request.get_json()
-    username = data.get("username")
+    email = data.get("email")
     password = data.get("password")
 
-    if not username or not password:
+    if not email or not password:
         return jsonify({"error": "Missing credentials"}), 400
 
-    if username not in users or not bcrypt.verify(password, users[username]):
+    if email not in users or not bcrypt.verify(password, users[email]):
         return jsonify({"error": "Invalid credentials"}), 401
 
     token = jwt.encode({
-        "sub": username,
+        "sub": email,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }, SECRET_KEY, algorithm="HS256")
 
