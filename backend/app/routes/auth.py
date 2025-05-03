@@ -2,6 +2,8 @@ from quart import Blueprint, request, jsonify
 from passlib.hash import bcrypt
 import jwt
 import datetime
+from app.utils.security import verify_token
+
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api")
 
@@ -34,17 +36,8 @@ async def login():
 
 @auth_bp.route("/protected", methods=["GET"])
 async def protected():
-    auth_header = request.headers.get("Authorization")
+    payload, error_response, status = verify_token(request)
+    if error_response:
+        return jsonify(error_response), status
 
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return jsonify({"error": "Missing or invalid token"}), 401
-
-    token = auth_header.split(" ")[1]
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return jsonify({"message": f"Welcome, {payload['sub']}!"})
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
+    return jsonify({"message": f"Welcome, {payload['sub']}!"})

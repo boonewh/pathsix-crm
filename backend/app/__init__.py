@@ -1,6 +1,7 @@
 from quart import Quart
 from quart_cors import cors
-from routes.auth import auth_bp
+from app.routes.auth import auth_bp
+from app.routes import register_blueprints
 
 def create_app():
     app = Quart(__name__)

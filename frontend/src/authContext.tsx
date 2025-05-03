@@ -28,15 +28,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!token;
 
   useEffect(() => {
-    const checkExpiration = () => {
+    const interval = setInterval(() => {
       if (!token) return;
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      if (payload.exp * 1000 < Date.now()) {
-        logout();
+  
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (payload.exp * 1000 < Date.now()) {
+          logout();
+        }
+      } catch (err) {
+        logout(); // in case of bad token format
       }
-    };
-    checkExpiration();
+    }, 60 * 1000); // check once per minute
+  
+    return () => clearInterval(interval);
   }, [token]);
+  
 
   return (
     <AuthContext.Provider value={{ token, login, logout, isAuthenticated }}>
