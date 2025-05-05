@@ -1,27 +1,49 @@
 import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/authContext";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import SidebarNav from "@/components/SidebarNav";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, logout } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen">
-      <header className="flex justify-between items-center bg-gray-200 px-4 py-2 shadow">
-        <h1 className="text-xl font-semibold">PathSix CRM</h1>
-        <Button variant="destructive" onClick={logout}>
+    <div className="flex min-h-screen bg-gray-100">
+      <SidebarNav
+        collapsed={collapsed}
+        toggleCollapsed={() => setCollapsed(!collapsed)}
+        isMobileOpen={isMobileOpen}
+        closeMobile={() => setIsMobileOpen(false)}
+      />
+
+      <div className="flex-1 flex flex-col">
+      <header className="flex justify-between items-center bg-white border-b px-6 py-4 shadow-sm">
+        {/* Mobile toggle */}
+        <button
+          className="lg:hidden text-gray-600"
+          onClick={() => setIsMobileOpen(true)}
+        >
+          ☰
+        </button>
+
+        <span className="text-sm text-gray-600">Welcome back</span>
+        <button
+          onClick={logout}
+          className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm"
+        >
           Logout
-        </Button>
+        </button>
       </header>
 
-      <main className="flex-grow p-4">
-        <Outlet />
-      </main>
+        <main className="flex-1 p-6 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
-

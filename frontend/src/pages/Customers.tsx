@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ClientCard from "@/components/ClientCard";
 
 interface Client {
   id: number;
@@ -11,9 +12,10 @@ interface Client {
 
 export default function Customers() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<Partial<Client>>({});
   const [error, setError] = useState("");
 
-  // Replace with your real JWT token later
   const token = localStorage.getItem("token") || "YOUR_TEST_JWT_HERE";
 
   useEffect(() => {
@@ -22,9 +24,24 @@ export default function Customers() {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((res) => res.json())
-      .then(setClients)
-      .catch(() => setError("Failed to load clients"));
+      .then(async (res) => {
+        console.log("Response status:", res.status);
+        const text = await res.text();
+        console.log("Raw response body:", text);
+
+        try {
+          const data = JSON.parse(text);
+          console.log("Parsed data:", data);
+          setClients(data);
+        } catch (err) {
+          console.error("JSON parse error:", err);
+          setError("Invalid server response");
+        }
+      })
+      .catch((err) => {
+        console.error("Fetch error:", err);
+        setError("Failed to load clients");
+      });
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -42,38 +59,48 @@ export default function Customers() {
     }
   };
 
+  const handleSave = async (id: number) => {
+    const res = await fetch(`/api/clients/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(form),
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setClients((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      setEditingId(null);
+    } else {
+      alert("Failed to save changes.");
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Customers</h1>
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <ul className="space-y-2">
+      <ul className="space-y-4">
         {clients.map((client) => (
-          <li key={client.id} className="border p-4 rounded shadow">
-            <div className="flex justify-between">
-              <div>
-                <p><strong>{client.name}</strong></p>
-                <p>{client.email}</p>
-                <p>{client.phone}</p>
-                <p className="text-sm text-gray-500">{client.address}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  className="bg-yellow-400 px-3 py-1 rounded"
-                  onClick={() => alert("TODO: Edit form")}
-                >
-                  Edit
-                </button>
-                <button
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                  onClick={() => handleDelete(client.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </li>
+          <ClientCard
+          key={client.id}
+          client={client}
+          editing={editingId === client.id}
+          form={form}
+          setForm={setForm}
+          onEdit={() => {
+            setEditingId(client.id);
+            setForm(client);
+          }}
+          onCancel={() => setEditingId(null)}
+          onSave={() => handleSave(client.id)}
+          onDelete={() => handleDelete(client.id)}
+        />
+        
         ))}
       </ul>
     </div>

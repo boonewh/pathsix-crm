@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -56,9 +57,7 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%
   }
-}
 
-@layer base {
   * {
     border-color: hsl(var(--border));
   }
@@ -66,5 +65,9 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  a {
+    @apply no-underline text-current;
   }
 }
