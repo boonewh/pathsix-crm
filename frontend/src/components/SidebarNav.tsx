@@ -6,7 +6,6 @@ import {
   Settings,
   X,
   ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 
 interface SidebarNavProps {
