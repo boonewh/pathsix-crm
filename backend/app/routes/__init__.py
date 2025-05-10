@@ -5,6 +5,7 @@ from app.routes.clients import clients_bp
 from app.routes.leads import leads_bp
 from app.routes.reports import reports_bp
 from app.routes.projects import projects_bp
+from app.routes.interactions import interactions_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
@@ -13,3 +14,4 @@ def register_blueprints(app):
     app.register_blueprint(leads_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(projects_bp)
+    app.register_blueprint(interactions_bp)
