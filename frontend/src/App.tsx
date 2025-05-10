@@ -8,6 +8,8 @@ import Projects from "@/pages/Projects";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
+import LeadDetailPage from "@/pages/LeadDetailPage";
+import ClientDetailPage from "@/pages/ClientDetailPage";
 import ProtectedLayout from "@/pages/ProtectedLayout";
 
 function App() {
@@ -26,6 +28,8 @@ function App() {
         <Route path="/projects" element={<Projects />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/clients/:id" element={<ClientDetailPage />} />
+        <Route path="/leads/:id" element={<LeadDetailPage />} />
       </Route>
       {/* Catch all */}
       <Route path="*" element={<NotFound />} />

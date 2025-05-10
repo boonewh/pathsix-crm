@@ -6,15 +6,17 @@ from app.config import SECRET_KEY
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api")
 
-# Dummy user
 users = {
     "admin@example.com": bcrypt.hash("password123")
 }
 
+user_clients = {
+    "admin@example.com": 1,
+    "bob@acme.com": 2,
+}
+
 @auth_bp.route("/login", methods=["POST"])
 async def login():
-    from app.utils.security import verify_token
-
     data = await request.get_json()
     email = data.get("email")
     password = data.get("password")
@@ -25,19 +27,14 @@ async def login():
     if email not in users or not bcrypt.verify(password, users[email]):
         return jsonify({"error": "Invalid credentials"}), 401
 
+    client_id = user_clients.get(email)
+    if client_id is None:
+        return jsonify({"error": "No client_id found for user"}), 403
+
     token = jwt.encode({
         "sub": email,
+        "client_id": client_id,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }, SECRET_KEY, algorithm="HS256")
 
     return jsonify({"token": token})
-
-
-@auth_bp.route("/protected", methods=["GET"])
-async def protected():
-    from app.utils.security import verify_token
-    payload, error_response, status = verify_token(request)
-    if error_response:
-        return jsonify(error_response), status
-
-    return jsonify({"message": f"Welcome, {payload['sub']}!"})

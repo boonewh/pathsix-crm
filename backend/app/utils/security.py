@@ -1,6 +1,6 @@
 import jwt
 from quart import request
-from app.routes.auth import SECRET_KEY  # or use a config file later
+from app.config import SECRET_KEY  # ✅ FIX: import from config, not routes
 
 def verify_token(request):
     auth_header = request.headers.get("Authorization")
