@@ -2,10 +2,13 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
+  Briefcase,
+  FolderKanban,
   FileText,
   Settings,
-  X,
   ChevronLeft,
+  X
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -20,16 +23,33 @@ const navSections = [
     section: "Main",
     items: [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+      { label: "Leads", path: "/leads", icon: UserPlus },
       { label: "Customers", path: "/customers", icon: Users },
     ],
   },
   {
+    section: "Accounts",
+    items: [
+      { label: "Accounts", path: "/accounts", icon: Briefcase },
+    ],
+  },
+  {
+    section: "Projects",
+    items: [
+      { label: "Projects", path: "/projects", icon: FolderKanban },
+    ],
+  },
+  {
     section: "Reports",
-    items: [{ label: "Reports", path: "/reports", icon: FileText }],
+    items: [
+      { label: "Reports", path: "/reports", icon: FileText },
+    ],
   },
   {
     section: "Settings",
-    items: [{ label: "Settings", path: "/settings", icon: Settings }],
+    items: [
+      { label: "Settings", path: "/settings", icon: Settings },
+    ],
   },
 ];
 
