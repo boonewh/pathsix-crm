@@ -25,6 +25,9 @@ After creating an interaction with a follow-up date, users have the option to ad
   `https://calendar.google.com/calendar/render?action=TEMPLATE...`
 - It only appears after the interaction has been saved to avoid mismatched or premature events.
 
+---
+---
+# Docs
 
 ## 🔐 Authentication for now. Upgrades will be worked on later.
 
@@ -34,7 +37,6 @@ JWT-based authentication protects all API routes. Users log in using email and p
 * `useAuth()` React hook provides access to token and login/logout state
 * All protected routes use a `ProtectedLayout` wrapper
 
----
 ---
 
 ## 📇 Clients & Leads
