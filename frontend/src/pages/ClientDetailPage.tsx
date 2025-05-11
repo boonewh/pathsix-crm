@@ -162,9 +162,11 @@ export default function ClientDetailPage() {
         </button>
       )}
 
-      <div className="pt-4 border-t">
-        <h2 className="text-xl font-semibold mb-2">Past Interactions</h2>
-        <ul className="space-y-2">
+      <details className="pt-4 border-t">
+        <summary className="text-xl font-semibold cursor-pointer mb-2">
+          Current Interactions
+        </summary>
+        <ul className="space-y-2 mt-4">
           {interactions.map((i) => (
             <InteractionCard
               key={i.id}
@@ -174,7 +176,7 @@ export default function ClientDetailPage() {
             />
           ))}
         </ul>
-      </div>
+      </details>
     </div>
   );
 }

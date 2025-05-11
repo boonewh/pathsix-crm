@@ -1,5 +1,33 @@
 # ✅ Future Upgrades for PathSix CRM (Updated)
 
+🧩 Core Features
+Add Projects with status (Won/Lost/Pending)
+
+Add Accounts tied to clients
+
+📊 Reporting & Analytics
+Overdue follow-up summary
+
+Activity history by rep or lead
+
+Monthly or weekly stats
+
+🔔 Productivity
+Daily/weekly email reminder system
+
+Tasks or to-dos tied to clients/leads
+
+Note pinning or tagging
+
+🧭 UI Improvements
+Search or filtering in client/lead lists
+
+Sortable tables (e.g., most recent first)
+
+Dashboard with quick stats
+
+
+
 - [ ] Hook into 404 page and log unknown routes to database once backend is ready  
         // Example future code to log 404s:
         // fetch("/api/log-404", { method: "POST", body: JSON.stringify({ path: window.location.pathname }), headers: { "Content-Type": "application/json" } }).catch((error) => { console.error("Failed to log 404:", error); });
