@@ -7,6 +7,7 @@ import {
   FolderKanban,
   FileText,
   Settings,
+  Calendar as CalendarIcon,
   ChevronLeft,
   X
 } from "lucide-react";
@@ -25,6 +26,7 @@ const navSections = [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "Leads", path: "/leads", icon: UserPlus },
       { label: "Customers", path: "/customers", icon: Users },
+      { label: "Calendar", path: "/calendar", icon: CalendarIcon },
     ],
   },
   {

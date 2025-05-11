@@ -10,6 +10,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import LeadDetailPage from "@/pages/LeadDetailPage";
 import ClientDetailPage from "@/pages/ClientDetailPage";
+import CalendarPage from "@/pages/CalendarPage";
 import ProtectedLayout from "@/pages/ProtectedLayout";
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/clients/:id" element={<ClientDetailPage />} />
         <Route path="/leads/:id" element={<LeadDetailPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
       </Route>
       {/* Catch all */}
       <Route path="*" element={<NotFound />} />

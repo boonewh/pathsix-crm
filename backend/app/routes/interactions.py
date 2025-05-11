@@ -24,7 +24,10 @@ async def list_interactions():
             "follow_up": i.follow_up.isoformat() if i.follow_up else None,
             "client_id": i.client_id,
             "lead_id": i.lead_id,
-        } for i in interactions
+            "client_name": i.client.name if i.client else None,
+            "lead_name": i.lead.name if i.lead else None
+        }
+        for i in interactions
     ])
 
 
