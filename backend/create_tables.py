@@ -1,4 +1,10 @@
-from app.database import Base, engine
-from app import models  # Make sure this imports the file with your Client model
+from app import create_app
+from app.database import db
 
-Base.metadata.create_all(bind=engine)
+app = create_app()
+
+with app.app_context():
+    db.create_all()
+
+print("✅ Tables created.")
+

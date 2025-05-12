@@ -1,10 +1,7 @@
 from app.database import Base, engine
-from app import models
 
-# Drop all tables
-Base.metadata.drop_all(bind=engine)
-
-# Recreate all tables
-Base.metadata.create_all(bind=engine)
-
-print("✅ All tables dropped and recreated.")
+# Drop all tables and recreate them from the current model definitions
+if __name__ == "__main__":
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tables reset using pure SQLAlchemy.")

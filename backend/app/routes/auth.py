@@ -1,40 +1,35 @@
 from quart import Blueprint, request, jsonify
-from passlib.hash import bcrypt
-import jwt
-import datetime
-from app.config import SECRET_KEY
+from app.models import User
+from app.database import SessionLocal
+from app.utils.auth_utils import verify_password, create_token
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api")
-
-users = {
-    "admin@example.com": bcrypt.hash("password123")
-}
-
-user_clients = {
-    "admin@example.com": 1,
-    "bob@acme.com": 2,
-}
 
 @auth_bp.route("/login", methods=["POST"])
 async def login():
     data = await request.get_json()
+
     email = data.get("email")
     password = data.get("password")
 
     if not email or not password:
         return jsonify({"error": "Missing credentials"}), 400
 
-    if email not in users or not bcrypt.verify(password, users[email]):
-        return jsonify({"error": "Invalid credentials"}), 401
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter_by(email=email).first()
+        if not user or not verify_password(password, user.password_hash):
+            return jsonify({"error": "Invalid credentials"}), 401
 
-    client_id = user_clients.get(email)
-    if client_id is None:
-        return jsonify({"error": "No client_id found for user"}), 403
+        token = create_token(user)
 
-    token = jwt.encode({
-        "sub": email,
-        "client_id": client_id,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-    }, SECRET_KEY, algorithm="HS256")
-
-    return jsonify({"token": token})
+        return jsonify({
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "roles": [role.name for role in user.roles]
+            },
+            "token": token
+        })
+    finally:
+        session.close()
