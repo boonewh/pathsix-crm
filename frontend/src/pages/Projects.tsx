@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import EntityCard from "@/components/ui/EntityCard";
+import { useAuth } from "@/authContext";
+
 
 type Project = {
   id: number;
@@ -20,10 +22,12 @@ export default function Projects() {
     client_id: "",
   });
 
+  const { token } = useAuth();
+
   const fetchProjects = async () => {
     const res = await fetch("/api/projects/", {
       headers: {
-        Authorization: "Bearer your-token-here",
+        Authorization: `Bearer ${token}`,
       },
     });
     const data = await res.json();
@@ -45,7 +49,7 @@ export default function Projects() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer your-token-here",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(formData),
     });

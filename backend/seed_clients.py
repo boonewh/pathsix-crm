@@ -1,10 +1,7 @@
 from datetime import datetime
-from app import create_app
 from app.database import SessionLocal
 from app.models import Client
 
-app = create_app()
-app.app_context().push()
 session = SessionLocal()
 
 try:
@@ -14,9 +11,14 @@ try:
         new_client = Client(
             client_id=1,
             name="Acme Corp",
+            contact_person="Jane Doe",
             email="jane.doe@acmecorp.com",
             phone="555-123-4567",
             address="123 Main St",
+            city="Metropolis",
+            state="TX",
+            zip="75001",
+            notes="VIP client, interested in long-term contract.",
             created_at=datetime.utcnow()
         )
         session.add(new_client)
@@ -26,3 +28,4 @@ try:
         print("ℹ️ Client with client_id=1 already exists.")
 finally:
     session.close()
+

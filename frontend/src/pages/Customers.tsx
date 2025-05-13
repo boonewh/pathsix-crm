@@ -3,21 +3,9 @@ import EntityCard from "@/components/ui/EntityCard";
 import { useAuth } from "@/authContext";
 import { Mail, Phone, MapPin, User, StickyNote } from "lucide-react";
 import { Link } from "react-router-dom";
+import ClientForm from "@/components/ClientForm";
+import { Client } from "@/types";
 
-
-interface Client {
-  id: number;
-  name: string;
-  contact_person?: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  notes?: string;
-  created_at: string;
-}
 
 export default function Customers() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -126,19 +114,7 @@ export default function Customers() {
             editing
             onSave={handleSave}
             onCancel={handleCancel}
-            editForm={
-              <div className="space-y-2">
-                <input placeholder="Company Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Contact Person" value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Zip" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" rows={3} />
-              </div>
-            }
+            editForm={<ClientForm form={form} setForm={setForm} />}
           />
         )}
 
@@ -154,19 +130,7 @@ export default function Customers() {
             onSave={handleSave}
             onCancel={handleCancel}
             onDelete={() => handleDelete(client.id)}
-            editForm={
-              <div className="space-y-2">
-                <input placeholder="Company Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Contact Person" value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <input placeholder="Zip" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" />
-                <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full border rounded px-2 py-1 text-sm" rows={3} />
-              </div>
-            }
+            editForm={<ClientForm form={form} setForm={setForm} />}
             details={
               <ul className="text-sm text-gray-600 space-y-1">
                 {client.contact_person && <li className="flex items-center gap-2"><User size={14} /> {client.contact_person}</li>}

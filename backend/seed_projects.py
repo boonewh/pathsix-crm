@@ -1,10 +1,7 @@
 from datetime import datetime
-from app import create_app
 from app.database import SessionLocal
 from app.models import Project, Lead, Client, User
 
-app = create_app()
-app.app_context().push()
 session = SessionLocal()
 
 try:
@@ -14,28 +11,37 @@ try:
 
     projects_to_create = [
         {
-            "title": "Rock Removal",
-            "status": "pending",
+            "project_name": "Rock Removal",
+            "project_status": "pending",
+            "project_description": "Clear rocky terrain for future installation.",
+            "project_start": datetime(2024, 9, 1),
+            "project_end": datetime(2024, 9, 10),
+            "project_worth": 3500.00,
             "lead_id": lead.id if lead else None,
             "client_id": client.id if client else None,
-            "created_at": datetime(2024, 9, 1),
+            "created_at": datetime.utcnow(),
+            "created_by": user.id,
+            "last_updated_by": user.id,
         },
         {
-            "title": "Turf Installation",
-            "status": "won",
+            "project_name": "Turf Installation",
+            "project_status": "won",
+            "project_description": "Install premium turf across designated areas.",
+            "project_start": datetime(2024, 10, 1),
+            "project_end": datetime(2024, 10, 5),
+            "project_worth": 5800.00,
             "lead_id": lead.id if lead else None,
             "client_id": client.id if client else None,
-            "created_at": datetime(2024, 10, 1),
+            "created_at": datetime.utcnow(),
+            "created_by": user.id,
+            "last_updated_by": user.id,
         },
     ]
 
     for data in projects_to_create:
-        exists = session.query(Project).filter_by(title=data["title"]).first()
+        exists = session.query(Project).filter_by(project_name=data["project_name"]).first()
         if not exists:
-            new_project = Project(
-                **data
-            )
-            session.add(new_project)
+            session.add(Project(**data))
 
     session.commit()
     print("✅ Projects seeded.")

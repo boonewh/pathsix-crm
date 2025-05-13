@@ -1,24 +1,31 @@
 from datetime import datetime
-from app import create_app
 from app.database import SessionLocal
 from app.models import Lead
 
-app = create_app()
-app.app_context().push()
 session = SessionLocal()
 
 leads_to_create = [
     {
         "name": "John Smith",
+        "contact_person": "John Smith",
         "email": "john.smith@example.com",
         "phone": "555-111-2222",
-        "address": "456 Elm St"
+        "address": "456 Elm St",
+        "city": "Austin",
+        "state": "TX",
+        "zip": "78701",
+        "notes": "Requested quote for backyard turf installation.",
     },
     {
         "name": "Lisa Johnson",
+        "contact_person": "Lisa Johnson",
         "email": "lisa.j@example.com",
         "phone": "555-333-4444",
-        "address": "789 Oak Ave"
+        "address": "789 Oak Ave",
+        "city": "Dallas",
+        "state": "TX",
+        "zip": "75201",
+        "notes": "Interested in rockbed redesign.",
     }
 ]
 
