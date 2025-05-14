@@ -25,7 +25,7 @@ const navSections = [
     items: [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "Leads", path: "/leads", icon: UserPlus },
-      { label: "Customers", path: "/customers", icon: Users },
+      { label: "Clients", path: "/clients", icon: Users },
       { label: "Calendar", path: "/calendar", icon: CalendarIcon },
     ],
   },

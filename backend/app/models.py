@@ -14,7 +14,7 @@ user_roles = Table(
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, nullable=False, index=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(128), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -37,7 +37,7 @@ class Role(Base):
 class Client(Base):
     __tablename__ = 'clients'
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, nullable=False)
+    tenant_id = Column(Integer, nullable=False)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -56,7 +56,7 @@ class Client(Base):
 class Lead(Base):
     __tablename__ = 'leads'
     id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, nullable=False)
+    tenant_id = Column(Integer, nullable=False)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -76,6 +76,7 @@ class Project(Base):
     id = Column(Integer, primary_key=True)
     lead_id = Column(Integer, ForeignKey('leads.id'), nullable=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
+    tenant_id = Column(Integer, nullable=False)
     project_name = Column(String(255), nullable=False)
     project_description = Column(Text, nullable=True)
     project_status = Column(String(20), nullable=False)
@@ -96,6 +97,10 @@ class Interaction(Base):
     id = Column(Integer, primary_key=True)
     lead_id = Column(Integer, ForeignKey('leads.id'), nullable=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
+    tenant_id = Column(Integer, nullable=False)
+    contact_person = Column(String)
+    email = Column(String)
+    phone = Column(String)
     contact_date = Column(DateTime, default=datetime.utcnow)
     outcome = Column(String(255))
     notes = Column(Text)

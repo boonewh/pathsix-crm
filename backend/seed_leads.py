@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.database import SessionLocal
-from app.models import Lead
+from app.models import Lead, User
 
 session = SessionLocal()
 
@@ -30,11 +30,14 @@ leads_to_create = [
 ]
 
 try:
+    # Get the admin user and use their tenant_id
+    user = session.query(User).filter_by(email="admin@example.com").first()
+
     for lead_data in leads_to_create:
         exists = session.query(Lead).filter_by(email=lead_data["email"]).first()
         if not exists:
             new_lead = Lead(
-                client_id=1,
+                tenant_id=user.tenant_id,
                 created_at=datetime.utcnow(),
                 **lead_data
             )

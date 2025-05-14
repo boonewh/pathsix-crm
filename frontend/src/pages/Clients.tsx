@@ -58,11 +58,16 @@ export default function Customers() {
 
     if (!res.ok) return alert("Failed to save client");
 
-    const saved = await res.json();
-    if (creating) setClients((prev) => [saved, ...prev]);
-    else setClients((prev) => prev.map((c) => (c.id === saved.id ? saved : c)));
+    // Refresh full list
+    const updatedRes = await fetch("/api/clients/", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const fullData = await updatedRes.json();
+    setClients(fullData);
+
     handleCancel();
   };
+
 
   const handleCancel = () => {
     setEditingId(null);
@@ -82,7 +87,7 @@ export default function Customers() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Customers</h1>
+      <h1 className="text-2xl font-bold mb-4">Clients</h1>
 
       {error && <p className="text-red-500">{error}</p>}
 

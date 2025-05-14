@@ -11,7 +11,7 @@ async def list_clients():
     user = request.user
     session = SessionLocal()
     try:
-        clients = session.query(Client).filter(Client.client_id == user.client_id).all()
+        clients = session.query(Client).filter(Client.tenant_id == user.tenant_id).all()
         return jsonify([
             {
                 "id": c.id,
@@ -33,7 +33,7 @@ async def create_client():
     session = SessionLocal()
     try:
         client = Client(
-            client_id=user.client_id,
+            tenant_id=user.tenant_id,
             name=data["name"],
             email=data.get("email"),
             phone=data.get("phone"),
@@ -46,6 +46,36 @@ async def create_client():
     finally:
         session.close()
 
+@clients_bp.route("/<int:client_id>", methods=["GET"])
+@requires_auth()
+async def get_client(client_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        client = session.query(Client).filter(
+            Client.id == client_id,
+            Client.tenant_id == user.tenant_id
+        ).first()
+
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
+
+        return jsonify({
+            "id": client.id,
+            "name": client.name,
+            "email": client.email,
+            "phone": client.phone,
+            "address": client.address,
+            "contact_person": client.contact_person,
+            "city": client.city,
+            "state": client.state,
+            "zip": client.zip,
+            "notes": client.notes,
+            "created_at": client.created_at.isoformat()
+        })
+    finally:
+        session.close()
+
 @clients_bp.route("/<int:client_id>", methods=["PUT"])
 @requires_auth()
 async def update_client(client_id):
@@ -55,7 +85,7 @@ async def update_client(client_id):
     try:
         client = session.query(Client).filter(
             Client.id == client_id,
-            Client.client_id == user.client_id
+            Client.tenant_id == user.tenant_id
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
@@ -78,7 +108,7 @@ async def delete_client(client_id):
     try:
         client = session.query(Client).filter(
             Client.id == client_id,
-            Client.client_id == user.client_id
+            Client.tenant_id == user.tenant_id
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404

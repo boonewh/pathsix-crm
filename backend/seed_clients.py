@@ -5,11 +5,11 @@ from app.models import Client
 session = SessionLocal()
 
 try:
-    existing = session.query(Client).filter_by(client_id=1).first()
+    existing = session.query(Client).filter_by(tenant_id=1).first()
 
     if not existing:
         new_client = Client(
-            client_id=1,
+            tenant_id=1,
             name="Acme Corp",
             contact_person="Jane Doe",
             email="jane.doe@acmecorp.com",

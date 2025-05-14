@@ -26,3 +26,12 @@ export interface Lead {
   notes?: string;
   created_at: string;
 }
+
+export type Interaction = {
+  id: number;
+  contact_date: string;
+  summary: string;
+  outcome: string;
+  notes: string;
+  follow_up?: string;
+};

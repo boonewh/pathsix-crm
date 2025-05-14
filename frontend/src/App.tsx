@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "@/pages/Login";
 import Accounts from "@/pages/Accounts";
 import Dashboard from "@/pages/Dashboard";
-import Customers from "@/pages/Customers";
+import Clients from "@/pages/Clients";
 import Leads from "@/pages/Leads";
 import Projects from "@/pages/Projects";
 import Reports from "@/pages/Reports";
@@ -24,7 +24,7 @@ function App() {
       <Route element={<ProtectedLayout />}>
         <Route path="/accounts" element={<Accounts />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/customers" element={<Customers />} />
+        <Route path="/clients" element={<Clients />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/reports" element={<Reports />} />

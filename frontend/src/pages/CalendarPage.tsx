@@ -50,6 +50,7 @@ export default function CalendarPage() {
       });
 
       const data: Interaction[] = await res.json();
+      console.log("Calendar raw data:", data);
 
       const filtered = data.filter((i) => {
         if (!i.follow_up) return false;

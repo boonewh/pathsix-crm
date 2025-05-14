@@ -49,28 +49,31 @@ export default function Projects() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: "Bearer your-token-here", // ← if you hook this up to authContext, replace it
       },
       body: JSON.stringify(formData),
     });
 
-    if (res.ok) {
-      const newProject = await res.json();
-      setProjects((prev) => [...prev, newProject]);
-      setFormData({
-        project_name: "",
-        project_status: "pending",
-        project_description: "",
-        project_worth: "",
-        project_start: "",
-        project_end: "",
-        lead_id: "",
-        client_id: "",
-      });
-    } else {
+    if (!res.ok) {
       console.error("Failed to create project");
+      return;
     }
+
+    // Re-fetch the full project list
+    fetchProjects();
+
+    setFormData({
+      project_name: "",
+      project_status: "pending",
+      project_description: "",
+      project_worth: "",
+      project_start: "",
+      project_end: "",
+      lead_id: "",
+      client_id: "",
+    });
   };
+
 
   return (
     <div className="p-6 space-y-8">

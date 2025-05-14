@@ -12,7 +12,7 @@ async def list_leads():
     user = request.user
     session = SessionLocal()
     try:
-        leads = session.query(Lead).filter(Lead.client_id == user.client_id).all()
+        leads = session.query(Lead).filter(Lead.tenant_id == user.tenant_id).all()
         return jsonify([
             {
                 "id": l.id,
@@ -34,7 +34,7 @@ async def create_lead():
     session = SessionLocal()
     try:
         lead = Lead(
-            client_id=user.client_id,
+            tenant_id=user.tenant_id,
             name=data["name"],
             email=data.get("email"),
             phone=data.get("phone"),
@@ -48,6 +48,36 @@ async def create_lead():
     finally:
         session.close()
 
+@leads_bp.route("/<int:lead_id>", methods=["GET"])
+@requires_auth()
+async def get_lead(lead_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        lead = session.query(Lead).filter(
+            Lead.id == lead_id,
+            Lead.tenant_id == user.tenant_id
+        ).first()
+
+        if not lead:
+            return jsonify({"error": "Lead not found"}), 404
+
+        return jsonify({
+            "id": lead.id,
+            "name": lead.name,
+            "contact_person": lead.contact_person,
+            "email": lead.email,
+            "phone": lead.phone,
+            "address": lead.address,
+            "city": lead.city,
+            "state": lead.state,
+            "zip": lead.zip,
+            "notes": lead.notes,
+            "created_at": lead.created_at.isoformat()
+        })
+    finally:
+        session.close()
+
 @leads_bp.route("/<int:lead_id>", methods=["PUT"])
 @requires_auth()
 async def update_lead(lead_id):
@@ -57,7 +87,7 @@ async def update_lead(lead_id):
     try:
         lead = session.query(Lead).filter(
             Lead.id == lead_id,
-            Lead.client_id == user.client_id
+            Lead.tenant_id == user.tenant_id
         ).first()
 
         if not lead:
@@ -82,7 +112,7 @@ async def delete_lead(lead_id):
     try:
         lead = session.query(Lead).filter(
             Lead.id == lead_id,
-            Lead.client_id == user.client_id
+            Lead.tenant_id == user.tenant_id
         ).first()
 
         if not lead:

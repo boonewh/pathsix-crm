@@ -25,7 +25,7 @@ try:
         admin_user = User(
             email="admin@example.com",
             password_hash=hash_password("password123"),
-            client_id=1,
+            tenant_id=1,
             roles=[admin_role]
         )
         session.add(admin_user)
@@ -35,7 +35,7 @@ try:
         standard_user = User(
             email="user@example.com",
             password_hash=hash_password("password123"),
-            client_id=1,
+            tenant_id=1,
             roles=[user_role]
         )
         session.add(standard_user)

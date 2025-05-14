@@ -1,5 +1,13 @@
 # ✅ Future Upgrades for PathSix CRM (Updated)
 
+⚠️ Optional: Hook up token from useAuth() in Projects.tsx like the other pages, so you can stop hardcoding the token string.
+
+Update how projects show on the client/lead detail pages
+
+Refactor projects to use status: "pending" | "won" | "lost" dropdown logic
+
+Add project filtering per lead or client in the /api/projects/ route
+
 🧩 Core Features
 Add Projects with status (Won/Lost/Pending)
 
