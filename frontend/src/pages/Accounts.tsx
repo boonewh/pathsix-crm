@@ -1,75 +1,163 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/authContext";
+import { Account } from "@/types";
+import AccountForm from "@/components/ui/AccountForm";
 import EntityCard from "@/components/ui/EntityCard";
+import { FormWrapper } from "@/components/ui/FormWrapper";
 
-type Account = {
+interface SelectableEntity {
   id: number;
-  account_number: string;
-  status: string;
-};
+  name: string;
+}
 
 export default function Accounts() {
+  const { token } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [currentlyEditingId, setCurrentlyEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<Partial<Account>>({ account_number: "" });
+  const [clients, setClients] = useState<SelectableEntity[]>([]);
+  const [form, setForm] = useState<Partial<Account>>({});
+  const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
+  // Load accounts
   useEffect(() => {
-    const fetchAccounts = async () => {
-      const res = await fetch("/api/accounts/", {
-        headers: {
-          Authorization: "Bearer your-token-here",
-        },
+    fetch("/api/accounts/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error("Expected array from /api/accounts/, got:", data);
+          return;
+        }
+        setAccounts(data);
       });
-      const data = await res.json();
+  }, [token]);
+
+  // Load clients for dropdown
+  useEffect(() => {
+    fetch("/api/clients/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) =>
+        setClients(data.map((c: any) => ({ id: c.id, name: c.name })))
+      );
+  }, [token]);
+
+  const resetForm = () => {
+    setForm({});
+    setCreating(false);
+    setEditingId(null);
+  };
+
+  const handleSave = async () => {
+    const method = creating ? "POST" : "PUT";
+    const url = creating
+      ? "/api/accounts/"
+      : `/api/accounts/${editingId}`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(form),
+    });
+
+    if (res.ok) {
+      const updated = await fetch("/api/accounts/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await updated.json();
       setAccounts(data);
-    };
-
-    fetchAccounts();
-  }, []);
-
-  const handleEdit = (account: Account) => {
-    setCurrentlyEditingId(account.id);
-    setForm({ account_number: account.account_number });
+      resetForm();
+    } else {
+      alert("Failed to save account");
+    }
   };
 
-  const handleCancel = () => {
-    setCurrentlyEditingId(null);
-    setForm({ account_number: "" });
-  };
+  const handleDelete = async (id: number) => {
+    const res = await fetch(`/api/accounts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  const handleSave = () => {
-    console.log("Saving account:", currentlyEditingId, form);
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === currentlyEditingId ? { ...a, ...form } : a
-      )
-    );
-    handleCancel();
+    if (res.ok) {
+      setAccounts((prev) => prev.filter((a) => a.id !== id));
+    } else {
+      alert("Failed to delete account");
+    }
   };
 
   return (
-    <div className="p-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {accounts.map((account) => (
-        <EntityCard
-          key={account.id}
-          title={account.account_number}
-          details={
-            <p className="text-sm text-gray-500">Status: {account.status}</p>
-          }
-          editing={currentlyEditingId === account.id}
-          editForm={
-            <input
-              type="text"
-              className="w-full border rounded px-2 py-1 text-sm"
-              value={form.account_number}
-              onChange={(e) => setForm({ ...form, account_number: e.target.value })}
-            />
-          }
-          onEdit={() => handleEdit(account)}
-          onDelete={() => console.log("delete", account.id)}
-          onSave={handleSave}
-          onCancel={handleCancel}
-        />
-      ))}
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Accounts</h1>
+
+      <button
+        onClick={() => {
+          setCreating(true);
+          setForm({});
+        }}
+        className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        + New Account
+      </button>
+
+      <ul className="space-y-4">
+        {creating && (
+          <EntityCard
+            title="New Account"
+            editing
+            onSave={handleSave}
+            onCancel={resetForm}
+            editForm={
+              <FormWrapper>
+                <AccountForm
+                  form={form}
+                  setForm={setForm}
+                  clients={clients}
+                />
+              </FormWrapper>
+            }
+          />
+        )}
+
+        {accounts.map((account) => (
+          <EntityCard
+            key={account.id}
+            title={account.account_number}
+            editing={editingId === account.id}
+            onEdit={() => {
+              setEditingId(account.id);
+              setForm(account);
+            }}
+            onCancel={resetForm}
+            onSave={handleSave}
+            onDelete={() => handleDelete(account.id)}
+            editForm={
+              <FormWrapper>
+                <AccountForm
+                  form={form}
+                  setForm={setForm}
+                  clients={clients}
+                />
+              </FormWrapper>
+            }
+            details={
+              <ul className="text-sm text-gray-700 space-y-1">
+                {account.account_name && <li>Name: {account.account_name}</li>}
+                {account.status && <li>Status: {account.status}</li>}
+                {account.opened_on && (
+                  <li>Opened: {new Date(account.opened_on).toLocaleDateString()}</li>
+                )}
+                {account.client_id && <li>Client ID: {account.client_id}</li>}
+                {account.notes && <li>Notes: {account.notes}</li>}
+              </ul>
+            }
+          />
+        ))}
+      </ul>
     </div>
   );
 }

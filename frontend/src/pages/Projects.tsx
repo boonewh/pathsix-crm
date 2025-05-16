@@ -1,171 +1,163 @@
 import { useEffect, useState } from "react";
-import EntityCard from "@/components/ui/EntityCard";
 import { useAuth } from "@/authContext";
-
-
-type Project = {
-  id: number;
-  project_name: string;
-  project_status: string;
-};
+import EntityCard from "@/components/ui/EntityCard";
+import { Project } from "@/types";
+import ProjectForm from "@/components/ui/ProjectForm";
+import { FormWrapper } from "@/components/ui/FormWrapper";
 
 export default function Projects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [formData, setFormData] = useState({
-    project_name: "",
-    project_status: "pending",
-    project_description: "",
-    project_worth: "",
-    project_start: "",
-    project_end: "",
-    lead_id: "",
-    client_id: "",
-  });
-
   const { token } = useAuth();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [form, setForm] = useState<Partial<Project>>({});
+  const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  const [leads, setLeads] = useState<{ id: number; name: string }[]>([]);
 
-  const fetchProjects = async () => {
-    const res = await fetch("/api/projects/", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    const data = await res.json();
-    setProjects(data);
-  };
-
+  // Fetch all projects
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    fetch("/api/projects/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then(setProjects);
+  }, [token]);
 
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Fetch clients and leads for dropdowns
+  useEffect(() => {
+    fetch("/api/clients/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) =>
+        setClients(data.map((c: any) => ({ id: c.id, name: c.name })))
+      );
+
+    fetch("/api/leads/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) =>
+        setLeads(data.map((l: any) => ({ id: l.id, name: l.name })))
+      );
+  }, [token]);
+
+  const resetForm = () => {
+    setForm({});
+    setCreating(false);
+    setEditingId(null);
   };
 
-  const handleCreateProject = async () => {
-    const res = await fetch("/api/projects/", {
-      method: "POST",
+  const handleSave = async () => {
+    const method = creating ? "POST" : "PUT";
+    const url = creating
+      ? "/api/projects/"
+      : `/api/projects/${editingId}`;
+
+    const res = await fetch(url, {
+      method,
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer your-token-here", // ← if you hook this up to authContext, replace it
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(form),
     });
 
-    if (!res.ok) {
-      console.error("Failed to create project");
-      return;
+    if (res.ok) {
+      const updated = await fetch("/api/projects/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await updated.json();
+      setProjects(data);
+      resetForm();
+    } else {
+      alert("Failed to save project");
     }
-
-    // Re-fetch the full project list
-    fetchProjects();
-
-    setFormData({
-      project_name: "",
-      project_status: "pending",
-      project_description: "",
-      project_worth: "",
-      project_start: "",
-      project_end: "",
-      lead_id: "",
-      client_id: "",
-    });
   };
 
+  const handleDelete = async (id: number) => {
+    const res = await fetch(`/api/projects/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+    } else {
+      alert("Failed to delete project");
+    }
+  };
 
   return (
-    <div className="p-6 space-y-8">
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="project_name"
-            placeholder="Project Name"
-            value={formData.project_name}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <select
-            name="project_status"
-            value={formData.project_status}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          >
-            <option value="pending">Pending</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-          </select>
-          <input
-            name="project_worth"
-            type="number"
-            placeholder="Project Worth"
-            value={formData.project_worth}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="project_start"
-            type="date"
-            value={formData.project_start}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="project_end"
-            type="date"
-            value={formData.project_end}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="lead_id"
-            type="number"
-            placeholder="Lead ID (optional)"
-            value={formData.lead_id}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <input
-            name="client_id"
-            type="number"
-            placeholder="Client ID (optional)"
-            value={formData.client_id}
-            onChange={handleFormChange}
-            className="border p-2 rounded"
-          />
-          <textarea
-            name="project_description"
-            placeholder="Description"
-            value={formData.project_description}
-            onChange={handleFormChange}
-            className="border p-2 rounded md:col-span-2"
-          />
-        </div>
-        <button
-          onClick={handleCreateProject}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Create Project
-        </button>
-      </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Projects</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <button
+        onClick={() => {
+          setCreating(true);
+          setForm({});
+        }}
+        className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        + New Project
+      </button>
+
+      <ul className="space-y-4">
+        {creating && (
+          <EntityCard
+            title="New Project"
+            editing
+            onSave={handleSave}
+            onCancel={resetForm}
+            editForm={
+              <FormWrapper>
+                <ProjectForm
+                  form={form}
+                  setForm={setForm}
+                  clients={clients}
+                  leads={leads}
+                />
+              </FormWrapper>
+            }
+          />
+        )}
+
         {projects.map((project) => (
           <EntityCard
             key={project.id}
             title={project.project_name}
-            details={
-              <p className="text-sm text-gray-500">
-                Status: {project.project_status}
-              </p>
+            editing={editingId === project.id}
+            onEdit={() => {
+              setEditingId(project.id);
+              setForm(project);
+            }}
+            onCancel={resetForm}
+            onSave={handleSave}
+            onDelete={() => handleDelete(project.id)}
+            editForm={
+              <FormWrapper>
+                <ProjectForm
+                  form={form}
+                  setForm={setForm}
+                  clients={clients}
+                  leads={leads}
+                />
+              </FormWrapper>
             }
-            onEdit={() => console.log("Edit", project.id)}
-            onDelete={() => console.log("Delete", project.id)}
+            details={
+              <ul className="text-sm text-gray-700 space-y-1">
+                {project.project_description && <li>{project.project_description}</li>}
+                {project.project_status && <li>Status: {project.project_status}</li>}
+                {project.project_start && <li>Start: {new Date(project.project_start).toLocaleString()}</li>}
+                {project.project_end && <li>End: {new Date(project.project_end).toLocaleString()}</li>}
+                {project.project_worth && <li>Worth: ${project.project_worth}</li>}
+                {project.client_id && <li>Client ID: {project.client_id}</li>}
+                {project.lead_id && <li>Lead ID: {project.lead_id}</li>}
+              </ul>
+            }
           />
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

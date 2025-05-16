@@ -117,7 +117,7 @@ function SidebarContent({
                 >
                   <Link
                     to={item.path}
-                    className={`block flex items-center gap-4 px-5 py-4 w-full text-sm font-medium leading-none transition-colors duration-200 rounded-md
+                    className={`flex items-center gap-4 px-5 py-4 w-full text-sm font-medium leading-none transition-colors duration-200 rounded-md
                       ${
                         isActive
                           ? "bg-blue-100 text-blue-700 border-l-4 border-blue-500"

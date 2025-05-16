@@ -16,8 +16,14 @@ async def list_projects():
         return jsonify([
             {
                 "id": p.id,
-                "title": p.project_name,
-                "status": p.project_status,
+                "project_name": p.project_name,
+                "project_status": p.project_status,
+                "project_description": p.project_description,
+                "project_start": p.project_start.isoformat() if p.project_start else None,
+                "project_end": p.project_end.isoformat() if p.project_end else None,
+                "project_worth": p.project_worth,
+                "client_id": p.client_id,
+                "lead_id": p.lead_id,
                 "created_at": p.created_at.isoformat()
             } for p in projects
         ])
@@ -35,19 +41,23 @@ async def create_project():
             tenant_id=user.tenant_id,
             client_id=data.get("client_id"),
             lead_id=data.get("lead_id"),
-            project_name=data["title"],
-            project_status=data.get("status", "pending"),
-            project_description=data.get("description"),
-            project_start=datetime.fromisoformat(data["start"]) if data.get("start") else None,
-            project_end=datetime.fromisoformat(data["end"]) if data.get("end") else None,
-            project_worth=data.get("worth"),
+            project_name=data["project_name"],
+            project_status=data.get("project_status", "pending"),
+            project_description=data.get("project_description"),
+            project_start=datetime.fromisoformat(data["project_start"]) if data.get("project_start") else None,
+            project_end=datetime.fromisoformat(data["project_end"]) if data.get("project_end") else None,
+            project_worth=data.get("project_worth"),
             created_by=user.id,
             created_at=datetime.utcnow()
         )
         session.add(project)
         session.commit()
         session.refresh(project)
-        return jsonify({"id": project.id}), 201
+        return jsonify({
+            "id": project.id,
+            "project_name": project.project_name,
+            "project_status": project.project_status
+        }), 201
     finally:
         session.close()
 
@@ -66,23 +76,29 @@ async def update_project(project_id):
         if not project:
             return jsonify({"error": "Project not found"}), 404
 
-        for field, attr in [
-            ("title", "project_name"),
-            ("status", "project_status"),
-            ("description", "project_description"),
-            ("start", "project_start"),
-            ("end", "project_end"),
-            ("worth", "project_worth")
+        for field in [
+            "project_name",
+            "project_status",
+            "project_description",
+            "project_start",
+            "project_end",
+            "project_worth",
+            "client_id",
+            "lead_id"
         ]:
             if field in data:
                 value = data[field]
-                if attr in ["project_start", "project_end"] and value:
+                if field in ["project_start", "project_end"] and value:
                     value = datetime.fromisoformat(value)
-                setattr(project, attr, value)
+                setattr(project, field, value)
 
         session.commit()
         session.refresh(project)
-        return jsonify({"id": project.id})
+        return jsonify({
+            "id": project.id,
+            "project_name": project.project_name,
+            "project_status": project.project_status
+        })
     finally:
         session.close()
 

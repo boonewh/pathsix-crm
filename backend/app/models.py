@@ -53,6 +53,23 @@ class Client(Base):
     def __repr__(self):
         return f"<Client {self.name}>"
 
+class Account(Base):
+    __tablename__ = 'accounts'
+
+    id = Column(Integer, primary_key=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=False)
+    tenant_id = Column(Integer, nullable=False)
+    account_number = Column(String(100), nullable=False, unique=True)
+    account_name = Column(String(255), nullable=True)
+    status = Column(String(50), default="active")
+    opened_on = Column(DateTime, default=datetime.utcnow)
+    notes = Column(Text)
+
+    client = relationship("Client", backref="accounts")
+
+    def __repr__(self):
+        return f"<Account {self.account_number}>"
+
 class Lead(Base):
     __tablename__ = 'leads'
     id = Column(Integer, primary_key=True)
