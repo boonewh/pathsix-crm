@@ -18,7 +18,12 @@ async def list_interactions():
         if client_id and lead_id:
             return jsonify({"error": "Cannot filter by both client_id and lead_id"}), 400
 
-        query = session.query(Interaction).filter(Interaction.tenant_id == user.tenant_id)
+        from sqlalchemy.orm import joinedload
+
+        query = session.query(Interaction).options(
+            joinedload(Interaction.client),
+            joinedload(Interaction.lead)
+        ).filter(Interaction.tenant_id == user.tenant_id)
 
         if client_id:
             query = query.filter(
@@ -45,9 +50,9 @@ async def list_interactions():
                 "lead_id": i.lead_id,
                 "client_name": i.client.name if i.client else None,
                 "lead_name": i.lead.name if i.lead else None,
-                "contact_person": i.contact_person,
-                "email": i.email,
-                "phone": i.phone,
+                "contact_person": i.client.contact_person if i.client else i.lead.contact_person if i.lead else None,
+                "email": i.client.email if i.client else i.lead.email if i.lead else None,
+                "phone": i.client.phone if i.client else i.lead.phone if i.lead else None,
                 "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
             } for i in interactions
         ])
@@ -134,5 +139,37 @@ async def delete_interaction(interaction_id):
         session.delete(interaction)
         session.commit()
         return jsonify({"message": "Interaction deleted"})
+    finally:
+        session.close()
+
+@interactions_bp.route("/transfer", methods=["POST"])
+@requires_auth()
+async def transfer_interactions():
+    data = await request.get_json()
+    from_lead_id = data.get("from_lead_id")
+    to_client_id = data.get("to_client_id")
+    user = request.user
+
+    if not from_lead_id or not to_client_id:
+        return jsonify({"error": "Missing from_lead_id or to_client_id"}), 400
+
+    session = SessionLocal()
+    try:
+        # Only transfer interactions owned by the tenant
+        interactions = session.query(Interaction).filter(
+            Interaction.tenant_id == user.tenant_id,
+            Interaction.lead_id == from_lead_id
+        ).all()
+
+        for interaction in interactions:
+            interaction.lead_id = None
+            interaction.client_id = to_client_id
+
+        session.commit()
+
+        return jsonify({
+            "success": True,
+            "transferred": len(interactions)
+        })
     finally:
         session.close()

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Mail, Phone, MapPin, StickyNote, User, CalendarPlus } from "lucide-react";
+import { Mail, Phone, MapPin, StickyNote, User, CalendarPlus, MoreVertical } from "lucide-react";
 import { useAuth } from "@/authContext";
 import { Lead, Interaction } from "@/types";
 
@@ -17,13 +17,20 @@ export default function LeadDetailPage() {
     notes: "",
     follow_up: ""
   });
+  const [showNoteMenu, setShowNoteMenu] = useState(false);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(`/api/leads/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
-      .then(setLead);
+      .then(data => {
+        setLead(data);
+        setNoteDraft(data.notes || "");
+      });
 
     fetch(`/api/interactions/?lead_id=${id}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -31,6 +38,51 @@ export default function LeadDetailPage() {
       .then(res => res.json())
       .then(setInteractions);
   }, [id, token]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowNoteMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const saveNote = async () => {
+    const res = await fetch(`/api/leads/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ notes: noteDraft }),
+    });
+    if (res.ok) {
+      setLead((prev) => prev && { ...prev, notes: noteDraft });
+      setIsEditingNote(false);
+    } else {
+      alert("Failed to save notes");
+    }
+  };
+
+  const deleteNote = async () => {
+    const res = await fetch(`/api/leads/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ notes: "" }),
+    });
+    if (res.ok) {
+      setLead((prev) => prev && { ...prev, notes: "" });
+      setNoteDraft("");
+      setIsEditingNote(false);
+    } else {
+      alert("Failed to delete notes");
+    }
+  };
 
   const handleInteractionSubmit = async () => {
     const res = await fetch("/api/interactions/", {
@@ -52,6 +104,64 @@ export default function LeadDetailPage() {
     }
   };
 
+  const handleConvertToClient = async () => {
+    if (!lead) return;
+
+    const confirmed = confirm(
+      `Convert "${lead.name}" to a Client? This will delete the lead.`
+    );
+    if (!confirmed) return;
+
+    const res = await fetch("/api/clients/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        address: lead.address,
+        contact_person: lead.contact_person,
+        city: lead.city,
+        state: lead.state,
+        zip: lead.zip,
+        notes: lead.notes,
+        // optionally add: lead_id: lead.id
+      }),
+    });
+
+    if (res.ok) {
+      const newClient = await res.json();
+
+      // 🔁 Reassign all interactions from lead → client
+      await fetch("/api/interactions/transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          from_lead_id: lead.id,
+          to_client_id: newClient.id,
+        }),
+      });
+
+      // ✅ Now delete the lead
+      await fetch(`/api/leads/${lead.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      window.location.href = `/clients/${newClient.id}`;
+    } else {
+      alert("Failed to convert lead to client");
+    }
+  };
+
   if (!lead) return <p className="p-6">Loading...</p>;
 
   return (
@@ -69,8 +179,78 @@ export default function LeadDetailPage() {
             <div>{[lead.city, lead.state].filter(Boolean).join(", ")} {lead.zip}</div>
           </div>
         </li>
-        {lead.notes && <li className="flex items-start gap-2"><StickyNote size={14} className="mt-[2px]" /> <div>{lead.notes}</div></li>}
       </ul>
+
+      <details className="bg-white rounded shadow-sm border">
+        <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
+          <StickyNote size={16} /> Notes
+        </summary>
+
+        <div className="p-4">
+          {!lead.notes && !isEditingNote ? (
+            <div className="space-y-2">
+              <button
+                onClick={() => setIsEditingNote(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Add Note
+              </button>
+            </div>
+          ) : isEditingNote ? (
+            <div className="space-y-2">
+              <textarea
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                rows={4}
+                className="w-full border rounded px-2 py-1 text-sm"
+                placeholder="Enter notes here"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={saveNote}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setIsEditingNote(false)}
+                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="relative border border-gray-200 rounded p-4 bg-white shadow-sm">
+              <p className="text-sm text-gray-800 whitespace-pre-wrap">{lead.notes}</p>
+              <div className="absolute top-2 right-2" ref={menuRef}>
+                <button onClick={() => setShowNoteMenu(prev => !prev)} className="text-gray-500 hover:text-gray-700">
+                  <MoreVertical size={16} />
+                </button>
+                {showNoteMenu && (
+                  <div className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-md z-10">
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      onClick={() => {
+                        setIsEditingNote(true);
+                        setShowNoteMenu(false);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      onClick={deleteNote}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </details>
 
       <details className="bg-white rounded shadow-sm border">
         <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
@@ -143,6 +323,12 @@ export default function LeadDetailPage() {
           </ul>
         </div>
       </details>
+      <button
+        onClick={handleConvertToClient}
+        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        Convert to Client
+      </button>
     </div>
   );
 }

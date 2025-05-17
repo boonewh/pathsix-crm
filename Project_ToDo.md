@@ -1,5 +1,7 @@
 # ✅ Future Upgrades for PathSix CRM (Updated)
 
+The ability for admins to assign a lead and then assign a follow up and see the results of that followup OR if it goes past due. 
+
 ⚠️ Optional: Hook up token from useAuth() in Projects.tsx like the other pages, so you can stop hardcoding the token string.
 
 Update how projects show on the client/lead detail pages
@@ -66,3 +68,30 @@ Dashboard with quick stats
 - [ ] Future: Add admin/superadmin roles that can cross client boundaries  
 - [ ] Future: Log all unauthorized access attempts for security audits  
 - [ ] Future: Add cleanup routines for deleting all data tied to a `client_id` (or soft delete)
+
+ Option B — Multiple Notes (Recommended for a CRM)
+Each note is its own object:
+
+ts
+Copy
+Edit
+{
+  id,
+  client_id,
+  content,
+  created_at,
+  created_by
+}
+Pros:
+
+Looks and feels like Interactions: multiple cards
+
+Allows timestamps, authorship, sorting
+
+Supports future features (pin note, search notes, filter notes)
+
+Cons:
+
+Requires a new ClientNote model in the backend
+
+Adds complexity to both DB and API

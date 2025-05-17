@@ -71,7 +71,17 @@ async def get_client(client_id):
             "state": client.state,
             "zip": client.zip,
             "notes": client.notes,
-            "created_at": client.created_at.isoformat()
+            "created_at": client.created_at.isoformat(),
+            "accounts": [
+                {
+                    "id": a.id,
+                    "account_number": a.account_number,
+                    "account_name": a.account_name,
+                    "status": a.status,
+                    "opened_on": a.opened_on.isoformat() if a.opened_on else None,
+                    "notes": a.notes,
+                } for a in client.accounts
+            ]
         })
     finally:
         session.close()

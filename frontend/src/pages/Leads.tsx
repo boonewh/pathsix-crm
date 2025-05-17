@@ -3,7 +3,7 @@ import EntityCard from "@/components/ui/EntityCard";
 import { Mail, Phone, MapPin, Flag, User, StickyNote } from "lucide-react";
 import { useAuth } from "@/authContext";
 import { Link } from "react-router-dom";
-import ClientForm from "@/components/ClientForm";
+import CompanyForm from "@/components/ui/CompanyForm";
 import { Lead } from "@/types";
 
 export default function Leads() {
@@ -132,7 +132,7 @@ export default function Leads() {
             editing
             onSave={handleSave}
             onCancel={handleCancel}
-            editForm={<ClientForm form={form} setForm={setForm} />}
+            editForm={<CompanyForm form={form} setForm={setForm} />}
           />
         )}
 
@@ -145,7 +145,7 @@ export default function Leads() {
             onSave={handleSave}
             onCancel={handleCancel}
             onDelete={() => handleDelete(lead.id)}
-            editForm={<ClientForm form={form} setForm={setForm} />}
+            editForm={<CompanyForm form={form} setForm={setForm} />}
             details={
               <ul className="text-sm text-gray-600 space-y-1">
                 {lead.contact_person && (

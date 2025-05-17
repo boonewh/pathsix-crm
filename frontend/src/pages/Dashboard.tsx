@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/authContext";
 import { Interaction } from "@/types";
 import { addDays, isBefore, isToday, isWithinInterval, parseISO } from "date-fns";
+import InteractionModal from "@/components/ui/InteractionModal";
 
 export default function Dashboard() {
   const { token } = useAuth();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
 
   useEffect(() => {
     fetch("/api/interactions/", {
@@ -39,11 +41,18 @@ export default function Dashboard() {
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
       {followUpsToday.length > 0 && (
-        <section className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-          <h2 className="font-semibold text-blue-800 mb-2">📅 Follow-ups Today</h2>
+        <section className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+          <h2 className="font-semibold text-yellow-800 mb-2">📅 Follow-ups for Today</h2>
           <ul className="space-y-1 text-sm">
             {followUpsToday.map((i) => (
-              <li key={i.id} className="text-gray-700">
+              <li
+                key={i.id}
+                className="text-gray-700 hover:bg-gray-100 px-2 py-1 rounded cursor-pointer"
+                onClick={() => setSelectedInteraction(i)}
+              >
+                <span className="font-medium text-gray-800 mr-1">
+                  {i.client_name || i.lead_name}
+                </span>
                 <strong>{i.summary}</strong> – {new Date(i.follow_up!).toLocaleTimeString()}
               </li>
             ))}
@@ -56,7 +65,14 @@ export default function Dashboard() {
           <h2 className="font-semibold text-green-800 mb-2">🗓️ Upcoming in Next 7 Days</h2>
           <ul className="space-y-1 text-sm">
             {upcomingFollowUps.map((i) => (
-              <li key={i.id} className="text-gray-700">
+              <li
+                key={i.id}
+                className="text-gray-700 hover:bg-gray-100 px-2 py-1 rounded cursor-pointer"
+                onClick={() => setSelectedInteraction(i)}
+              >
+                <span className="font-medium text-gray-800 mr-1">
+                  {i.client_name || i.lead_name}
+                </span>
                 <strong>{i.summary}</strong> – {new Date(i.follow_up!).toLocaleDateString()}
               </li>
             ))}
@@ -69,8 +85,15 @@ export default function Dashboard() {
           <h2 className="font-semibold text-red-800 mb-2">⚠️ Overdue Follow-ups</h2>
           <ul className="space-y-1 text-sm">
             {overdueFollowUps.map((i) => (
-              <li key={i.id} className="text-gray-700">
-                <strong>{i.summary}</strong> – was due {new Date(i.follow_up!).toLocaleDateString()}
+              <li
+                key={i.id}
+                className="text-gray-700 hover:bg-gray-100 px-2 py-1 rounded cursor-pointer"
+                onClick={() => setSelectedInteraction(i)}
+              >
+                <span className="font-medium text-gray-800 mr-1">
+                  {i.client_name || i.lead_name}
+                </span>
+                <strong>{i.summary}</strong> – {new Date(i.follow_up!).toLocaleDateString()}
               </li>
             ))}
           </ul>
@@ -80,6 +103,20 @@ export default function Dashboard() {
       <div className="bg-gray-200 text-center py-4 text-sm text-gray-600 rounded shadow-inner">
         Tailwind is still working fine here too 👍
       </div>
+      {selectedInteraction && (
+        <InteractionModal
+          title={`Follow-up: ${selectedInteraction.client_name || selectedInteraction.lead_name}`}
+          date={new Date(selectedInteraction.contact_date).toLocaleString()}
+          outcome={selectedInteraction.outcome}
+          summary={selectedInteraction.summary}
+          notes={selectedInteraction.notes}
+          contact_person={selectedInteraction.contact_person}
+          email={selectedInteraction.email}
+          phone={selectedInteraction.phone}
+          profile_link={selectedInteraction.profile_link}
+          onClose={() => setSelectedInteraction(null)}
+        />
+      )}
     </div>
   );
 }

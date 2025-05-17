@@ -21,6 +21,7 @@ export interface Client {
   zip: string;
   notes?: string;
   created_at: string;
+  accounts?: Account[];  
 }
 
 export type Interaction = {
@@ -30,6 +31,14 @@ export type Interaction = {
   outcome: string;
   notes: string;
   follow_up?: string;
+  client_id?: number;
+  lead_id?: number;
+  client_name?: string;
+  lead_name?: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  profile_link?: string;
 };
 
 export interface Lead {
