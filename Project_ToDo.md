@@ -37,6 +37,25 @@ Sortable tables (e.g., most recent first)
 Dashboard with quick stats
 
 
+Role-based access controls (your backend supports roles but they aren’t enforced or editable via UI yet).
+
+Account management (like the Project section but for Account records per client).
+
+Recurring follow-ups or reminders with notifications.
+
+Activity log or audit trail of who did what and when.
+
+Email or SMS integration for follow-up reminders or outreach.
+
+Export to CSV/PDF for clients, leads, or interactions.
+
+Advanced filtering/search/sorting on the frontend lists.
+
+Multi-tenant user/role management from the frontend (admin panels).
+
+Dashboard metrics (conversion rate, total deals won/lost, average deal size, etc.).
+
+
 
 - [ ] Hook into 404 page and log unknown routes to database once backend is ready  
         // Example future code to log 404s:

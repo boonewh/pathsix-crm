@@ -9,7 +9,7 @@ import {
   Settings,
   Calendar as CalendarIcon,
   ChevronLeft,
-  X
+  X,
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -31,27 +31,19 @@ const navSections = [
   },
   {
     section: "Accounts",
-    items: [
-      { label: "Accounts", path: "/accounts", icon: Briefcase },
-    ],
+    items: [{ label: "Accounts", path: "/accounts", icon: Briefcase }],
   },
   {
     section: "Projects",
-    items: [
-      { label: "Projects", path: "/projects", icon: FolderKanban },
-    ],
+    items: [{ label: "Projects", path: "/projects", icon: FolderKanban }],
   },
   {
     section: "Reports",
-    items: [
-      { label: "Reports", path: "/reports", icon: FileText },
-    ],
+    items: [{ label: "Reports", path: "/reports", icon: FileText }],
   },
   {
     section: "Settings",
-    items: [
-      { label: "Settings", path: "/settings", icon: Settings },
-    ],
+    items: [{ label: "Settings", path: "/settings", icon: Settings }],
   },
 ];
 
@@ -64,16 +56,16 @@ function SidebarContent({
 
   return (
     <div
-      className={`flex flex-col bg-white border-r p-4 h-full transition-[width] duration-300 ease-in-out ${
+      className={`flex flex-col bg-neutral shadow-md border-r p-4 h-full transition-[width] duration-300 ease-in-out ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
       <div className="flex justify-center mb-4">
         {collapsed ? (
-          <img src="/crm_rocket_logo.png" alt="PS" className="w-8 h-auto" />
+          <img src="/logo-all-seasons-foam.png" alt="PS" className="w-8 h-auto" />
         ) : (
           <img
-            src="/pathsix_crm_logo.png"
+            src="/logo-all-seasons-foam.png"
             alt="PathSix CRM"
             className="max-w-[180px] h-auto"
           />
@@ -82,25 +74,24 @@ function SidebarContent({
 
       <button
         onClick={toggleCollapsed}
-        className="self-end mb-4 text-gray-500 hover:text-gray-800 transition-transform duration-300"
-        >
+        className="self-end mb-4 text-muted-foreground hover:text-foreground transition-transform duration-300"
+      >
         <span
-            className={`inline-block transition-transform duration-300 ${
+          className={`inline-block transition-transform duration-300 ${
             collapsed ? "rotate-180" : ""
-            }`}
+          }`}
         >
-            <ChevronLeft size={20} />
+          <ChevronLeft size={20} />
         </span>
-        </button>
+      </button>
 
-
-      <nav className="border border-border rounded-md bg-card px-3 py-4">
+      <nav className="border border-border rounded-md bg-neutral px-3 py-4">
         {navSections.map((group) => (
           <div key={group.section}>
             {navSections.length > 1 && !collapsed && (
-                <p className="text-xs text-muted-foreground font-semibold px-4 pt-0.5 pb-0.25 uppercase tracking-wide">
-                    {group.section}
-                </p>
+              <p className="text-xs text-primary font-semibold px-4 pt-0.5 pb-0.25 uppercase tracking-wide">
+                {group.section}
+              </p>
             )}
             {group.items.map((item, index) => {
               const Icon = item.icon;
@@ -110,9 +101,7 @@ function SidebarContent({
                 <div
                   key={item.path}
                   className={`my-[10px] ${
-                    index !== group.items.length - 1
-                      ? "border-b border-muted"
-                      : ""
+                    index !== group.items.length - 1 ? "border-b border-muted" : ""
                   }`}
                 >
                   <Link
@@ -120,8 +109,8 @@ function SidebarContent({
                     className={`flex items-center gap-4 px-5 py-4 w-full text-sm font-medium leading-none transition-colors duration-200 rounded-md
                       ${
                         isActive
-                          ? "bg-blue-100 text-blue-700 border-l-4 border-blue-500"
-                          : "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-black"
+                          ? "bg-primary/10 text-primary border-l-4 border-primary"
+                          : "bg-muted text-secondary hover:bg-accent hover:text-white"
                       }`}
                     onClick={closeMobile}
                   >
@@ -165,10 +154,10 @@ export default function SidebarNav({
           ></div>
 
           {/* Sliding Sidebar */}
-          <div className="relative z-10 w-64 bg-white shadow-lg transform transition-transform duration-300 translate-x-0">
+          <div className="relative z-10 w-64 bg-neutral shadow-lg transform transition-transform duration-300 translate-x-0">
             <button
               onClick={closeMobile}
-              className="absolute top-2 right-2 text-gray-600 hover:text-black"
+              className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-5 w-5" />
             </button>

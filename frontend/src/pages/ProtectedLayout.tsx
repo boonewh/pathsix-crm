@@ -13,7 +13,7 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-muted">
       <SidebarNav
         collapsed={collapsed}
         toggleCollapsed={() => setCollapsed(!collapsed)}
@@ -22,23 +22,24 @@ export default function ProtectedLayout() {
       />
 
       <div className="flex-1 flex flex-col">
-      <header className="flex justify-between items-center bg-white border-b px-6 py-4 shadow-sm">
-        {/* Mobile toggle */}
-        <button
-          className="lg:hidden text-gray-600"
-          onClick={() => setIsMobileOpen(true)}
-        >
-          ☰
-        </button>
+        <header className="flex justify-between items-center bg-primary text-primary-foreground px-6 py-4 shadow-sm">
+          {/* Mobile toggle */}
+          <button
+            className="lg:hidden text-primary-foreground hover:opacity-80"
+            onClick={() => setIsMobileOpen(true)}
+          >
+            ☰
+          </button>
 
-        <span className="text-sm text-gray-600">Welcome back</span>
-        <button
-          onClick={logout}
-          className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm"
-        >
-          Logout
-        </button>
-      </header>
+          <span className="text-lg font-bold tracking-tight">PathSix CRM</span>
+
+          <button
+            onClick={logout}
+            className="bg-accent text-accent-foreground hover:bg-accent/80 px-4 py-2 rounded-md text-sm transition-colors"
+          >
+            Logout
+          </button>
+        </header>
 
         <main className="flex-1 p-6 overflow-y-auto">
           <Outlet />
