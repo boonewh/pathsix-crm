@@ -111,3 +111,43 @@ async def delete_account(account_id):
         return jsonify({"message": "Account deleted"})
     finally:
         session.close()
+
+@accounts_bp.route("/<int:account_id>", methods=["GET"])
+@requires_auth()
+async def get_account(account_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        account = session.query(Account).filter(
+            Account.id == account_id,
+            Account.tenant_id == user.tenant_id
+        ).first()
+
+        if not account:
+            return jsonify({"error": "Account not found"}), 404
+
+        from app.models import ActivityLog, ActivityType
+
+        log = ActivityLog(
+            tenant_id=user.tenant_id,
+            user_id=user.id,
+            action=ActivityType.viewed,
+            entity_type="account",
+            entity_id=account.id,
+            description=f"Viewed account '{account.account_number}'"
+        )
+        session.add(log)
+        session.commit()
+
+        return jsonify({
+            "id": account.id,
+            "account_name": account.account_name,
+            "account_number": account.account_number,
+            "status": account.status,
+            "notes": account.notes,
+            "client_id": account.client_id,
+            "opened_on": account.opened_on.isoformat() if account.opened_on else None
+        })
+    finally:
+        session.close()
+

@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKe
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
+from sqlalchemy import Enum
+import enum
 
 # Association table for many-to-many User ↔ Role
 user_roles = Table(
@@ -38,6 +40,11 @@ class Client(Base):
     __tablename__ = 'clients'
     id = Column(Integer, primary_key=True, index=True)
     tenant_id = Column(Integer, nullable=False)
+    created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
+    updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -74,6 +81,11 @@ class Lead(Base):
     __tablename__ = 'leads'
     id = Column(Integer, primary_key=True)
     tenant_id = Column(Integer, nullable=False)
+    created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
+    updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -129,3 +141,25 @@ class Interaction(Base):
 
     def __repr__(self):
         return f"<Interaction {self.id} on {self.contact_date}>"
+    
+# enum for consistency
+class ActivityType(enum.Enum):
+    viewed = "viewed"
+    created = "created"
+    edited = "edited"
+    deleted = "deleted"
+
+class ActivityLog(Base):
+    __tablename__ = 'activity_logs'
+
+    id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    action = Column(Enum(ActivityType), nullable=False)
+    entity_type = Column(String(50), nullable=False)  # "client", "lead"
+    entity_id = Column(Integer, nullable=False)
+    timestamp = Column(DateTime, default=datetime.now, index=True)
+    description = Column(Text)
+
+    def __repr__(self):
+        return f"<ActivityLog {self.action.value} {self.entity_type} {self.entity_id}>"

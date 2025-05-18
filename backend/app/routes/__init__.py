@@ -6,6 +6,8 @@ from app.routes.leads import leads_bp
 from app.routes.reports import reports_bp
 from app.routes.projects import projects_bp
 from app.routes.interactions import interactions_bp
+from app.routes.activity import activity_bp
+from app.routes.users import users_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
@@ -15,3 +17,5 @@ def register_blueprints(app):
     app.register_blueprint(reports_bp)
     app.register_blueprint(projects_bp)
     app.register_blueprint(interactions_bp)
+    app.register_blueprint(activity_bp)
+    app.register_blueprint(users_bp)

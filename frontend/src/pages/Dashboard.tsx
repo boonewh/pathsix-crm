@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/authContext";
 import { Interaction } from "@/types";
-import { addDays, isBefore, isToday, isWithinInterval, parseISO } from "date-fns";
+import { addDays, isBefore, isToday, isWithinInterval, parseISO, formatDistanceToNow } from "date-fns";
 import InteractionModal from "@/components/ui/InteractionModal";
 
 export default function Dashboard() {
   const { token } = useAuth();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
+
+  interface ActivityEntry {
+    entity_type: string;
+    entity_id: number;
+    name: string;
+    last_touched: string;
+    profile_link: string;
+  }
+
+  const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
 
   useEffect(() => {
     fetch("/api/interactions/", {
@@ -16,6 +26,15 @@ export default function Dashboard() {
       .then((res) => res.json())
       .then(setInteractions);
   }, [token]);
+
+  useEffect(() => {
+    fetch("/api/activity/recent", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then(setRecentActivity);
+  }, [token]);
+
 
   const now = new Date();
 
@@ -94,6 +113,28 @@ export default function Dashboard() {
                   {i.client_name || i.lead_name}
                 </span>
                 <strong>{i.summary}</strong> – {new Date(i.follow_up!).toLocaleDateString()}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {recentActivity.length > 0 && (
+        <section className="bg-white border border-gray-300 p-4 rounded shadow-sm">
+          <h2 className="text-lg font-semibold mb-2 text-blue-700">🕓 Recently Touched</h2>
+          <ul className="space-y-2 text-sm text-gray-800">
+            {recentActivity.map((entry) => (
+              <li key={`${entry.entity_type}-${entry.entity_id}`}>
+                <a
+                  href={entry.profile_link}
+                  className="text-blue-600 hover:underline"
+                >
+                  {entry.name}
+                </a>{" "}
+                <span className="text-gray-500">
+                  {formatDistanceToNow(parseISO(entry.last_touched), { addSuffix: true })}
+
+                </span>
               </li>
             ))}
           </ul>

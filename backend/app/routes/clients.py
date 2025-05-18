@@ -1,7 +1,8 @@
 from quart import Blueprint, request, jsonify
-from app.models import Client
+from app.models import Client, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
+from datetime import datetime
 
 clients_bp = Blueprint("clients", __name__, url_prefix="/api/clients")
 
@@ -11,14 +12,24 @@ async def list_clients():
     user = request.user
     session = SessionLocal()
     try:
-        clients = session.query(Client).filter(Client.tenant_id == user.tenant_id).all()
+        clients = session.query(Client).filter(
+            Client.tenant_id == user.tenant_id,
+            Client.created_by == user.id,
+            Client.deleted_at == None
+        ).all()
+
         return jsonify([
             {
                 "id": c.id,
                 "name": c.name,
+                "contact_person": c.contact_person,
                 "email": c.email,
                 "phone": c.phone,
                 "address": c.address,
+                "city": c.city,
+                "state": c.state,
+                "zip": c.zip,
+                "notes": c.notes,
                 "created_at": c.created_at.isoformat()
             } for c in clients
         ])
@@ -34,6 +45,7 @@ async def create_client():
     try:
         client = Client(
             tenant_id=user.tenant_id,
+            created_by=user.id,
             name=data["name"],
             email=data.get("email"),
             phone=data.get("phone"),
@@ -54,11 +66,26 @@ async def get_client(client_id):
     try:
         client = session.query(Client).filter(
             Client.id == client_id,
-            Client.tenant_id == user.tenant_id
+            Client.tenant_id == user.tenant_id,
+            Client.created_by == user.id,
+            Client.deleted_at == None
         ).first()
-
         if not client:
             return jsonify({"error": "Client not found"}), 404
+
+        # Log the view
+        log = ActivityLog(
+            tenant_id=user.tenant_id,
+            user_id=user.id,
+            action=ActivityType.viewed,
+            entity_type="client",
+            entity_id=client.id,
+            description=f"Viewed client '{client.name}'"
+        )
+        session.add(log)
+
+        session.commit()
+        session.refresh(client)
 
         return jsonify({
             "id": client.id,
@@ -71,17 +98,7 @@ async def get_client(client_id):
             "state": client.state,
             "zip": client.zip,
             "notes": client.notes,
-            "created_at": client.created_at.isoformat(),
-            "accounts": [
-                {
-                    "id": a.id,
-                    "account_number": a.account_number,
-                    "account_name": a.account_name,
-                    "status": a.status,
-                    "opened_on": a.opened_on.isoformat() if a.opened_on else None,
-                    "notes": a.notes,
-                } for a in client.accounts
-            ]
+            "created_at": client.created_at.isoformat()
         })
     finally:
         session.close()
@@ -100,9 +117,15 @@ async def update_client(client_id):
         if not client:
             return jsonify({"error": "Client not found"}), 404
 
-        for field in ["name", "email", "phone", "address"]:
+        for field in [
+            "name", "contact_person", "email", "phone",
+            "address", "city", "state", "zip", "notes"
+        ]:
             if field in data:
                 setattr(client, field, data[field])
+        
+        client.updated_by = user.id
+        client.updated_at = datetime.utcnow()  # Only needed if you drop onupdate later
 
         session.commit()
         session.refresh(client)
@@ -123,8 +146,11 @@ async def delete_client(client_id):
         if not client:
             return jsonify({"error": "Client not found"}), 404
 
-        session.delete(client)
+        client.deleted_at = datetime.utcnow()
+        client.deleted_by = user.id
         session.commit()
-        return jsonify({"message": "Client deleted successfully"})
+        return jsonify({"message": "Client soft-deleted successfully"})
+
     finally:
         session.close()
+
