@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, Table, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -19,6 +19,7 @@ class User(Base):
     tenant_id = Column(Integer, nullable=False, index=True)
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(128), nullable=False)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     roles = relationship("Role", secondary=user_roles, back_populates="users")

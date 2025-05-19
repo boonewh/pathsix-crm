@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "@/pages/Login";
 import Accounts from "@/pages/Accounts";
+import AdminUsersPage from "@/pages/AdminUsersPage";
 import Dashboard from "@/pages/Dashboard";
 import Clients from "@/pages/Clients";
 import Leads from "@/pages/Leads";
@@ -23,6 +24,7 @@ function App() {
       {/* Protected Routes */}
       <Route element={<ProtectedLayout />}>
         <Route path="/accounts" element={<Accounts />} />
+        <Route path="/admin/users" element={<AdminUsersPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/leads" element={<Leads />} />

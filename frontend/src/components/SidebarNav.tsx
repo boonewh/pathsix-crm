@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/authContext";
+
 import {
   LayoutDashboard,
   Users,
@@ -19,33 +21,6 @@ interface SidebarNavProps {
   closeMobile: () => void;
 }
 
-const navSections = [
-  {
-    section: "Main",
-    items: [
-      { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-      { label: "Leads", path: "/leads", icon: UserPlus },
-      { label: "Clients", path: "/clients", icon: Users },
-      { label: "Calendar", path: "/calendar", icon: CalendarIcon },
-    ],
-  },
-  {
-    section: "Accounts",
-    items: [{ label: "Accounts", path: "/accounts", icon: Briefcase }],
-  },
-  {
-    section: "Projects",
-    items: [{ label: "Projects", path: "/projects", icon: FolderKanban }],
-  },
-  {
-    section: "Reports",
-    items: [{ label: "Reports", path: "/reports", icon: FileText }],
-  },
-  {
-    section: "Settings",
-    items: [{ label: "Settings", path: "/settings", icon: Settings }],
-  },
-];
 
 function SidebarContent({
   collapsed,
@@ -53,6 +28,42 @@ function SidebarContent({
   toggleCollapsed,
 }: Pick<SidebarNavProps, "collapsed" | "closeMobile" | "toggleCollapsed">) {
   const location = useLocation();
+  const { user } = useAuth(); // ✅ Add this line here
+
+  const navSections = [
+    {
+      section: "Main",
+      items: [
+        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+        { label: "Leads", path: "/leads", icon: UserPlus },
+        { label: "Clients", path: "/clients", icon: Users },
+        { label: "Calendar", path: "/calendar", icon: CalendarIcon },
+      ],
+    },
+    {
+      section: "Accounts",
+      items: [{ label: "Accounts", path: "/accounts", icon: Briefcase }],
+    },
+    {
+      section: "Projects",
+      items: [{ label: "Projects", path: "/projects", icon: FolderKanban }],
+    },
+    {
+      section: "Reports",
+      items: [{ label: "Reports", path: "/reports", icon: FileText }],
+    },
+    ...(user?.roles.includes("admin")
+      ? [
+          {
+            section: "Admin",
+            items: [
+              { label: "Users", path: "/admin/users", icon: Users },
+              { label: "Settings", path: "/settings", icon: Settings },
+            ],
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div
