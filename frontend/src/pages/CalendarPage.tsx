@@ -36,8 +36,6 @@ export default function CalendarPage() {
       });
 
       const data: Interaction[] = await res.json();
-      console.log("Calendar raw data:", data);
-
       const filtered = data.filter((i) => {
         if (!i.follow_up) return false;
         if (filterType === "client") return !!i.client_id;
@@ -97,9 +95,7 @@ export default function CalendarPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          follow_up: newDate.toISOString(),
-        }),
+        body: JSON.stringify({ follow_up: newDate.toISOString() }),
       });
 
       if (!res.ok) {
@@ -133,6 +129,8 @@ export default function CalendarPage() {
     return <div className={style}>{arg.event.title}</div>;
   }
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Follow-Up Calendar</h1>
@@ -153,21 +151,30 @@ export default function CalendarPage() {
       {loading ? (
         <p className="text-gray-500">Loading follow-ups...</p>
       ) : (
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
-          events={events}
-          editable={true}
-          eventDrop={handleEventDrop}
-          eventClick={handleEventClick}
-          eventContent={renderEventContent}
-          height="80vh"
-        />
+        <div className="overflow-x-auto">
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView={isMobile ? "timeGridDay" : "dayGridMonth"}
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,listDay",
+            }}
+            buttonText={{
+              today: "Today",
+              month: "Month",
+              week: "Week",
+              day: "Day",
+              list: "List",
+            }}
+            events={events}
+            editable={true}
+            eventDrop={handleEventDrop}
+            eventClick={handleEventClick}
+            eventContent={renderEventContent}
+            height="auto"
+          />
+        </div>
       )}
 
       {selectedEvent && (
