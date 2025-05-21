@@ -4,6 +4,7 @@ import { Account } from "@/types";
 import AccountForm from "@/components/ui/AccountForm";
 import EntityCard from "@/components/ui/EntityCard";
 import { FormWrapper } from "@/components/ui/FormWrapper";
+import { apiFetch } from "@/lib/api";
 
 interface SelectableEntity {
   id: number;
@@ -20,28 +21,30 @@ export default function Accounts() {
 
   // Load accounts
   useEffect(() => {
-    fetch("/api/accounts/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!Array.isArray(data)) {
-          console.error("Expected array from /api/accounts/, got:", data);
-          return;
-        }
-        setAccounts(data);
+    const loadAccounts = async () => {
+      const res = await apiFetch("/accounts/", {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        console.error("Expected array from /accounts/, got:", data);
+        return;
+      }
+      setAccounts(data);
+    };
+    loadAccounts();
   }, [token]);
 
   // Load clients for dropdown
   useEffect(() => {
-    fetch("/api/clients/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) =>
-        setClients(data.map((c: any) => ({ id: c.id, name: c.name })))
-      );
+    const loadClients = async () => {
+      const res = await apiFetch("/clients/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setClients(data.map((c: any) => ({ id: c.id, name: c.name })));
+    };
+    loadClients();
   }, [token]);
 
   const resetForm = () => {
@@ -53,10 +56,10 @@ export default function Accounts() {
   const handleSave = async () => {
     const method = creating ? "POST" : "PUT";
     const url = creating
-      ? "/api/accounts/"
-      : `/api/accounts/${editingId}`;
+      ? "/accounts/"
+      : `/accounts/${editingId}`;
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +69,7 @@ export default function Accounts() {
     });
 
     if (res.ok) {
-      const updated = await fetch("/api/accounts/", {
+      const updated = await apiFetch("/accounts/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await updated.json();
@@ -78,7 +81,7 @@ export default function Accounts() {
   };
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/accounts/${id}`, {
+    const res = await apiFetch(`/accounts/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

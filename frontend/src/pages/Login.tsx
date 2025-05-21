@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAuth } from "@/authContext";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "@/lib/api"; 
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,12 +17,9 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await apiFetch("/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
   
       const data = await res.json();

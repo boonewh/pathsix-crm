@@ -5,11 +5,13 @@
       "@/*": ["./*"]
     },
     "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
   },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./tsconfig.node.json" },
+  { "path": "./tsconfig.playwright.json" }
   ]
 }

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Mail, Phone, MapPin, StickyNote, User, CalendarPlus, MoreVertical } from "lucide-react";
 import { useAuth } from "@/authContext";
 import { Lead, Interaction } from "@/types";
+import { apiFetch } from "@/lib/api";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function LeadDetailPage() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch(`/api/leads/${id}`, {
+    apiFetch(`/leads/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -32,7 +33,7 @@ export default function LeadDetailPage() {
         setNoteDraft(data.notes || "");
       });
 
-    fetch(`/api/interactions/?lead_id=${id}`, {
+    apiFetch(`/interactions/?lead_id=${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -50,12 +51,9 @@ export default function LeadDetailPage() {
   }, []);
 
   const saveNote = async () => {
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await apiFetch(`/leads/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ notes: noteDraft }),
     });
     if (res.ok) {
@@ -67,12 +65,9 @@ export default function LeadDetailPage() {
   };
 
   const deleteNote = async () => {
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await apiFetch(`/leads/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ notes: "" }),
     });
     if (res.ok) {
@@ -85,13 +80,10 @@ export default function LeadDetailPage() {
   };
 
   const handleInteractionSubmit = async () => {
-    const res = await fetch("/api/interactions/", {
+    const res = await apiFetch("/interactions/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ ...interactionForm, lead_id: id }),
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ ...interactionForm, lead_id: Number(id) }),
     });
 
     if (res.ok) {
@@ -112,12 +104,9 @@ export default function LeadDetailPage() {
     );
     if (!confirmed) return;
 
-    const res = await fetch("/api/clients/", {
+    const res = await apiFetch("/clients/", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         name: lead.name,
         email: lead.email,
@@ -128,32 +117,24 @@ export default function LeadDetailPage() {
         state: lead.state,
         zip: lead.zip,
         notes: lead.notes,
-        // optionally add: lead_id: lead.id
       }),
     });
 
     if (res.ok) {
       const newClient = await res.json();
 
-      // 🔁 Reassign all interactions from lead → client
-      await fetch("/api/interactions/transfer", {
+      await apiFetch("/interactions/transfer", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           from_lead_id: lead.id,
           to_client_id: newClient.id,
         }),
       });
 
-      // ✅ Now delete the lead
-      await fetch(`/api/leads/${lead.id}`, {
+      await apiFetch(`/leads/${lead.id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       window.location.href = `/clients/${newClient.id}`;
@@ -181,11 +162,11 @@ export default function LeadDetailPage() {
         </li>
       </ul>
 
+      {/* Notes Section */}
       <details className="bg-white rounded shadow-sm border">
         <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
           <StickyNote size={16} /> Notes
         </summary>
-
         <div className="p-4">
           {!lead.notes && !isEditingNote ? (
             <div className="space-y-2">
@@ -252,11 +233,11 @@ export default function LeadDetailPage() {
         </div>
       </details>
 
+      {/* Interactions Section */}
       <details className="bg-white rounded shadow-sm border">
         <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
           <CalendarPlus size={16} /> Interactions
         </summary>
-
         <div className="p-4 space-y-4">
           {showInteractionForm && (
             <div className="space-y-2 mb-4">
@@ -323,6 +304,7 @@ export default function LeadDetailPage() {
           </ul>
         </div>
       </details>
+
       <button
         onClick={handleConvertToClient}
         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"

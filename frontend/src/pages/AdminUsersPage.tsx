@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/authContext";
 import { MoreVertical } from "lucide-react";
+import { apiFetch } from "@/lib/api";
 
 interface User {
   id: number;
@@ -22,7 +23,7 @@ export default function AdminUsersPage() {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    fetch("/api/users/", {
+    apiFetch("/users/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -34,7 +35,7 @@ export default function AdminUsersPage() {
   }, [token]);
 
   const handleCreate = async () => {
-    const res = await fetch("/api/users/", {
+    const res = await apiFetch("/users/", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -57,7 +58,7 @@ export default function AdminUsersPage() {
   };
 
   const handleToggleActive = async (id: number) => {
-    const res = await fetch(`/api/users/${id}/toggle-active`, {
+    const res = await apiFetch(`/users/${id}/toggle-active`, {
       method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     });

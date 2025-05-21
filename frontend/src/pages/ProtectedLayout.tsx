@@ -2,6 +2,7 @@ import { Outlet, Navigate } from "react-router-dom";
 import { useAuth } from "@/authContext";
 import { useState, useEffect, useRef } from "react";
 import SidebarNav from "@/components/SidebarNav";
+import { apiFetch } from "@/lib/api";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, logout, token } = useAuth();
@@ -14,20 +15,22 @@ export default function ProtectedLayout() {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      if (search.trim().length < 2) {
-        setResults([]);
-        setShowResults(false);
-        return;
-      }
+      const runSearch = async () => {
+        if (search.trim().length < 2) {
+          setResults([]);
+          setShowResults(false);
+          return;
+        }
 
-      fetch(`/api/search/?q=${encodeURIComponent(search)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setResults(data);
-          setShowResults(true);
+        const res = await apiFetch(`/search/?q=${encodeURIComponent(search)}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        const data = await res.json();
+        setResults(data);
+        setShowResults(true);
+      };
+
+      runSearch();
     }, 300);
 
     return () => clearTimeout(delayDebounce);
@@ -46,6 +49,15 @@ export default function ProtectedLayout() {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+    };
+    window.addEventListener("unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("unauthorized", handleUnauthorized);
+  }, []);
+
 
   return (
     <div className="flex min-h-screen bg-muted">

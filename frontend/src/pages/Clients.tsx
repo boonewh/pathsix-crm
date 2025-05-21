@@ -5,7 +5,7 @@ import { Mail, Phone, MapPin, User, StickyNote } from "lucide-react";
 import { Link } from "react-router-dom";
 import CompanyForm from "@/components/ui/CompanyForm";
 import { Client } from "@/types";
-
+import { apiFetch } from "@/lib/api";
 
 export default function Customers() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -26,7 +26,7 @@ export default function Customers() {
   const { token } = useAuth();
 
   useEffect(() => {
-    fetch("/api/clients/", {
+    apiFetch("/clients/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -35,7 +35,7 @@ export default function Customers() {
   }, [token]);
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/clients/${id}`, {
+    const res = await apiFetch(`/clients/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -45,21 +45,17 @@ export default function Customers() {
 
   const handleSave = async () => {
     const method = creating ? "POST" : "PUT";
-    const url = creating ? "/api/clients/" : `/api/clients/${editingId}`;
+    const url = creating ? "/clients/" : `/clients/${editingId}`;
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(form),
     });
 
     if (!res.ok) return alert("Failed to save client");
 
-    // Refresh full list
-    const updatedRes = await fetch("/api/clients/", {
+    const updatedRes = await apiFetch("/clients/", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const fullData = await updatedRes.json();
@@ -67,7 +63,6 @@ export default function Customers() {
 
     handleCancel();
   };
-
 
   const handleCancel = () => {
     setEditingId(null);
@@ -126,7 +121,11 @@ export default function Customers() {
         {clients.map((client) => (
           <EntityCard
             key={client.id}
-            title={<Link to={`/clients/${client.id}`} className="hover:underline">{client.name}</Link>}
+            title={
+              <Link to={`/clients/${client.id}`} className="hover:underline">
+                {client.name}
+              </Link>
+            }
             editing={editingId === client.id}
             onEdit={() => {
               setEditingId(client.id);
@@ -138,19 +137,39 @@ export default function Customers() {
             editForm={<CompanyForm form={form} setForm={setForm} />}
             details={
               <ul className="text-sm text-gray-600 space-y-1">
-                {client.contact_person && <li className="flex items-center gap-2"><User size={14} /> {client.contact_person}</li>}
-                {client.email && <li className="flex items-center gap-2"><Mail size={14} /> {client.email}</li>}
-                {client.phone && <li className="flex items-center gap-2"><Phone size={14} /> {client.phone}</li>}
+                {client.contact_person && (
+                  <li className="flex items-center gap-2">
+                    <User size={14} /> {client.contact_person}
+                  </li>
+                )}
+                {client.email && (
+                  <li className="flex items-center gap-2">
+                    <Mail size={14} /> {client.email}
+                  </li>
+                )}
+                {client.phone && (
+                  <li className="flex items-center gap-2">
+                    <Phone size={14} /> {client.phone}
+                  </li>
+                )}
                 {(client.address || client.city || client.state || client.zip) && (
                   <li className="flex items-start gap-2">
                     <MapPin size={14} className="mt-[2px]" />
                     <div className="leading-tight">
                       {client.address && <div>{client.address}</div>}
-                      <div>{[client.city, client.state].filter(Boolean).join(", ")}{client.zip ? ` ${client.zip}` : ""}</div>
+                      <div>
+                        {[client.city, client.state].filter(Boolean).join(", ")}
+                        {client.zip ? ` ${client.zip}` : ""}
+                      </div>
                     </div>
                   </li>
                 )}
-                {client.notes && <li className="flex items-start gap-2"><StickyNote size={14} className="mt-[2px]" /> <div>{client.notes}</div></li>}
+                {client.notes && (
+                  <li className="flex items-start gap-2">
+                    <StickyNote size={14} className="mt-[2px]" />{" "}
+                    <div>{client.notes}</div>
+                  </li>
+                )}
               </ul>
             }
           />

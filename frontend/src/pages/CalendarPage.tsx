@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useAuth } from "@/authContext";
 import InteractionModal from "@/components/ui/InteractionModal";
 import { Interaction } from "@/types";
+import { apiFetch } from "@/lib/api";
 
 interface CalendarEvent {
   id: string;
@@ -31,7 +32,7 @@ export default function CalendarPage() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const res = await fetch("/api/interactions/", {
+      const res = await apiFetch("/interactions/", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -89,7 +90,7 @@ export default function CalendarPage() {
     const newDate = arg.event.start;
 
     try {
-      const res = await fetch(`/api/interactions/${id}`, {
+      const res = await apiFetch(`/interactions/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

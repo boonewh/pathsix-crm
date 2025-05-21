@@ -5,6 +5,7 @@ import { useAuth } from "@/authContext";
 import { Link } from "react-router-dom";
 import CompanyForm from "@/components/ui/CompanyForm";
 import { Lead } from "@/types";
+import { apiFetch } from "@/lib/api";
 
 export default function Leads() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -29,7 +30,7 @@ export default function Leads() {
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const res = await fetch("/api/leads/", {
+        const res = await apiFetch("/leads/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -66,20 +67,17 @@ export default function Leads() {
 
   const handleSave = async () => {
     const method = creating ? "POST" : "PATCH";
-    const url = creating ? "/api/leads/" : `/api/leads/${currentlyEditingId}`;
+    const url = creating ? "/leads/" : `/leads/${currentlyEditingId}`;
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(form),
     });
 
     if (!res.ok) return alert("Failed to save lead");
 
-    const updatedRes = await fetch("/api/leads/", {
+    const updatedRes = await apiFetch("/leads/", {
       headers: { Authorization: `Bearer ${token}` },
     });
     const fullData = await updatedRes.json();
@@ -89,7 +87,7 @@ export default function Leads() {
   };
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await apiFetch(`/leads/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -139,7 +137,11 @@ export default function Leads() {
         {leads.map((lead) => (
           <EntityCard
             key={lead.id}
-            title={<Link to={`/leads/${lead.id}`} className="hover:underline">{lead.name}</Link>}
+            title={
+              <Link to={`/leads/${lead.id}`} className="hover:underline">
+                {lead.name}
+              </Link>
+            }
             editing={currentlyEditingId === lead.id}
             onEdit={() => handleEdit(lead)}
             onSave={handleSave}
@@ -149,13 +151,19 @@ export default function Leads() {
             details={
               <ul className="text-sm text-gray-600 space-y-1">
                 {lead.contact_person && (
-                  <li className="flex items-center gap-2"><User size={14} /> {lead.contact_person}</li>
+                  <li className="flex items-center gap-2">
+                    <User size={14} /> {lead.contact_person}
+                  </li>
                 )}
                 {lead.email && (
-                  <li className="flex items-center gap-2"><Mail size={14} /> {lead.email}</li>
+                  <li className="flex items-center gap-2">
+                    <Mail size={14} /> {lead.email}
+                  </li>
                 )}
                 {lead.phone && (
-                  <li className="flex items-center gap-2"><Phone size={14} /> {lead.phone}</li>
+                  <li className="flex items-center gap-2">
+                    <Phone size={14} /> {lead.phone}
+                  </li>
                 )}
                 {(lead.address || lead.city || lead.state || lead.zip) && (
                   <li className="flex items-start gap-2">
@@ -170,7 +178,9 @@ export default function Leads() {
                   </li>
                 )}
                 {lead.status && (
-                  <li className="flex items-center gap-2"><Flag size={14} /> {lead.status}</li>
+                  <li className="flex items-center gap-2">
+                    <Flag size={14} /> {lead.status}
+                  </li>
                 )}
                 {lead.notes && (
                   <li className="flex items-start gap-2">

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Mail, Phone, MapPin, StickyNote, User, CalendarPlus, MoreVertical, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/authContext";
 import { Client, Interaction, Account } from "@/types";
+import { apiFetch } from "@/lib/api";
 
 export default function ClientDetailPage() {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export default function ClientDetailPage() {
   const [accountForm, setAccountForm] = useState<Partial<Account>>({});
 
   useEffect(() => {
-    fetch(`/api/clients/${id}`, {
+    apiFetch(`/clients/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -37,7 +38,7 @@ export default function ClientDetailPage() {
         setAccounts(data.accounts || []);
       });
 
-    fetch(`/api/interactions/?client_id=${id}`, {
+    apiFetch(`/interactions/?client_id=${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
@@ -55,12 +56,9 @@ export default function ClientDetailPage() {
   }, []);
 
   const saveNote = async () => {
-    const res = await fetch(`/api/clients/${id}`, {
+    const res = await apiFetch(`/clients/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ notes: noteDraft }),
     });
     if (res.ok) {
@@ -72,7 +70,7 @@ export default function ClientDetailPage() {
   };
 
   const deleteNote = async () => {
-    const res = await fetch(`/api/clients/${id}`, {
+    const res = await apiFetch(`/clients/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -90,13 +88,13 @@ export default function ClientDetailPage() {
   };
 
   const handleInteractionSubmit = async () => {
-    const res = await fetch("/api/interactions/", {
+    const res = await apiFetch("/interactions/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ ...interactionForm, client_id: id }),
+      body: JSON.stringify({ ...interactionForm, client_id: Number(id) }),
     });
 
     if (res.ok) {
@@ -168,7 +166,7 @@ export default function ClientDetailPage() {
                 <button
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                   onClick={async () => {
-                    const res = await fetch("/api/accounts/", {
+                    const res = await apiFetch("/accounts/", {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -237,7 +235,7 @@ export default function ClientDetailPage() {
                         className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                         onClick={async () => {
                           if (confirm("Delete this account?")) {
-                            const res = await fetch(`/api/accounts/${account.id}`, {
+                            const res = await apiFetch(`/accounts/${account.id}`, {
                               method: "DELETE",
                               headers: {
                                 Authorization: `Bearer ${token}`,

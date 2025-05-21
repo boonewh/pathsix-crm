@@ -4,6 +4,7 @@ import EntityCard from "@/components/ui/EntityCard";
 import { Project } from "@/types";
 import ProjectForm from "@/components/ui/ProjectForm";
 import { FormWrapper } from "@/components/ui/FormWrapper";
+import { apiFetch } from "@/lib/api";
 
 export default function Projects() {
   const { token } = useAuth();
@@ -16,7 +17,7 @@ export default function Projects() {
 
   // Fetch all projects
   useEffect(() => {
-    fetch("/api/projects/", {
+    apiFetch("/projects/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -25,7 +26,7 @@ export default function Projects() {
 
   // Fetch clients and leads for dropdowns
   useEffect(() => {
-    fetch("/api/clients/", {
+    apiFetch("/clients/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -33,7 +34,7 @@ export default function Projects() {
         setClients(data.map((c: any) => ({ id: c.id, name: c.name })))
       );
 
-    fetch("/api/leads/", {
+    apiFetch("/leads/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -51,20 +52,17 @@ export default function Projects() {
   const handleSave = async () => {
     const method = creating ? "POST" : "PUT";
     const url = creating
-      ? "/api/projects/"
-      : `/api/projects/${editingId}`;
+      ? "/projects/"
+      : `/projects/${editingId}`;
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(form),
     });
 
     if (res.ok) {
-      const updated = await fetch("/api/projects/", {
+      const updated = await apiFetch("/projects/", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await updated.json();
@@ -76,7 +74,7 @@ export default function Projects() {
   };
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/projects/${id}`, {
+    const res = await apiFetch(`/projects/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

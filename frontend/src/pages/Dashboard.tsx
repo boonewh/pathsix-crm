@@ -3,6 +3,7 @@ import { useAuth } from "@/authContext";
 import { Interaction } from "@/types";
 import { addDays, isBefore, isToday, isWithinInterval, parseISO, formatDistanceToNow } from "date-fns";
 import InteractionModal from "@/components/ui/InteractionModal";
+import { apiFetch } from "@/lib/api";
 
 export default function Dashboard() {
   const { token } = useAuth();
@@ -20,7 +21,7 @@ export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState<ActivityEntry[]>([]);
 
   useEffect(() => {
-    fetch("/api/interactions/", {
+    apiFetch("/interactions/", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -28,7 +29,7 @@ export default function Dashboard() {
   }, [token]);
 
   useEffect(() => {
-    fetch("/api/activity/recent", {
+    apiFetch("/activity/recent", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
