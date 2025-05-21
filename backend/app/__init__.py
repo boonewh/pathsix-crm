@@ -5,9 +5,18 @@ from app.routes import register_blueprints
 
 def create_app():
     app = Quart(__name__)
-    app = cors(app, allow_origin="http://localhost:5173")
+
+    # ✅ Add CORS *before* anything else, with credentials
+    app = cors(
+        app,
+        allow_origin=["http://localhost:5173", "https://pathsix-crm.vercel.app"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    )
+
     app.config.from_pyfile("config.py")
 
+    # ✅ Register routes AFTER CORS is applied
     register_blueprints(app)
-    return app
 
+    return app
