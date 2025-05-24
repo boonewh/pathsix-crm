@@ -5,6 +5,7 @@ from quart import request, jsonify, current_app
 from functools import wraps
 from app.models import User
 from app.database import SessionLocal
+from itsdangerous import URLSafeTimedSerializer
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
@@ -53,3 +54,15 @@ def requires_auth(roles: list = None):
                 session.close()
         return decorated
     return wrapper
+
+def generate_reset_token(email: str) -> str:
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return s.dumps(email, salt="password-reset")
+
+def verify_reset_token(token: str, max_age=1800) -> str | None:
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        email = s.loads(token, salt="password-reset", max_age=max_age)
+        return email
+    except Exception:
+        return None

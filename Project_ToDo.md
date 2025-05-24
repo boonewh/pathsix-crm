@@ -160,3 +160,34 @@ System Messages / Alerts
 The key is to show just enough to orient the user and prompt useful actions.
 
 Would you like to start implementing this piece-by-piece, maybe with the follow-up summary cards and a recent activity list first?
+
+
+ Good Default Uses for Settings.tsx
+🔐 Account Security
+ Change Password (already implemented)
+
+ Enable 2FA (later)
+
+👤 User Profile
+ Change display name
+
+ Update email (with re-verification)
+
+ Upload/change profile picture (if applicable)
+
+🔔 Notifications
+ Toggle notification emails (e.g., reminders, assignments)
+
+ Set preferred notification channels (email/SMS)
+
+🏷️ Preferences
+ Set default dashboard view (e.g. clients vs leads)
+
+ Theme switcher (light/dark mode toggle)
+
+ Language or timezone preferences
+
+🧑‍💼 Admin-Specific (only shown for admins)
+ Manage system-wide settings (like roles or API tokens)
+
+ Manage billing and subscriptions (if you ever make it paid)

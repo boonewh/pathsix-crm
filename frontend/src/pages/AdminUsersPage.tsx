@@ -12,7 +12,7 @@ interface User {
 }
 
 export default function AdminUsersPage() {
-  const { token } = useAuth();
+  const { token, user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
@@ -82,6 +82,29 @@ export default function AdminUsersPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleChangeRole = async (id: number, newRole: string) => {
+    const res = await apiFetch(`/users/${id}/roles`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ roles: [newRole] }),
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, roles: updated.roles } : u))
+      );
+      setOpenMenuId(null);
+    } else {
+      const { error } = await res.json();
+      alert(error || "Failed to update role");
+    }
+  };
+
+
   const activeUsers = users.filter((u) => u.is_active);
   const inactiveUsers = users.filter((u) => !u.is_active);
 
@@ -140,7 +163,17 @@ export default function AdminUsersPage() {
           >
             <div>
               <p className="font-medium">{user.email}</p>
-              <p className="text-sm text-gray-600">Roles: {user.roles.join(", ")}</p>
+              <div className="text-sm">
+                <span
+                  className={`inline-block px-2 py-0.5 text-xs rounded ${
+                    user.roles.includes("admin")
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {user.roles[0]}
+                </span>
+              </div>
               <p className="text-xs text-gray-400">
                 Created: {new Date(user.created_at).toLocaleString()}
               </p>
@@ -156,12 +189,29 @@ export default function AdminUsersPage() {
                 <MoreVertical size={20} />
               </button>
               {openMenuId === user.id && (
-                <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-md z-10">
+                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-10">
+                  {user.roles.includes("admin") ? (
+                    <button
+                      onClick={() => handleChangeRole(user.id, "user")}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-600"
+                      disabled={user.id === currentUser?.id}
+                    >
+                      Demote to User
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleChangeRole(user.id, "admin")}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-600"
+                    >
+                      Promote to Admin
+                    </button>
+                  )}
+
                   <button
                     onClick={() => handleToggleActive(user.id)}
                     className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-yellow-600"
                   >
-                    Deactivate
+                    {user.is_active ? "Deactivate" : "Reactivate"}
                   </button>
                 </div>
               )}
@@ -183,7 +233,18 @@ export default function AdminUsersPage() {
               >
                 <div>
                   <p className="font-medium text-gray-500">{user.email}</p>
-                  <p className="text-sm text-gray-500">Roles: {user.roles.join(", ")}</p>
+                  <div className="text-sm">
+                    <span
+                      className={`inline-block px-2 py-0.5 text-xs rounded ${
+                        user.roles.includes("admin")
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {user.roles[0]}
+                    </span>
+                  </div>
+
                   <p className="text-xs text-gray-400">
                     Created: {new Date(user.created_at).toLocaleString()}
                   </p>

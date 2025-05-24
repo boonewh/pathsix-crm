@@ -52,13 +52,18 @@ function SidebarContent({
       section: "Reports",
       items: [{ label: "Reports", path: "/reports", icon: FileText }],
     },
+    {
+      section: "Settings",
+      items: [
+        { label: "Settings", path: "/settings", icon: Settings },
+      ],
+    },
     ...(user?.roles.includes("admin")
       ? [
           {
             section: "Admin",
             items: [
               { label: "Users", path: "/admin/users", icon: Users },
-              { label: "Settings", path: "/settings", icon: Settings },
             ],
           },
         ]

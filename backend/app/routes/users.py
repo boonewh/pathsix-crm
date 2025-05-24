@@ -93,3 +93,31 @@ async def toggle_user_active(user_id):
         })
     finally:
         session.close()
+
+@users_bp.route("/<int:user_id>/roles", methods=["PUT"])
+@requires_auth(roles=["admin"])
+async def update_user_roles(user_id):
+    user = request.user
+    data = await request.get_json()
+    new_roles = data.get("roles", [])
+
+    session = SessionLocal()
+    try:
+        target = session.query(User).filter(
+            User.id == user_id,
+            User.tenant_id == user.tenant_id
+        ).first()
+
+        if not target:
+            return jsonify({"error": "User not found"}), 404
+
+        roles = session.query(Role).filter(Role.name.in_(new_roles)).all()
+        target.roles = roles  # Replace all roles
+        session.commit()
+
+        return jsonify({
+            "id": target.id,
+            "roles": [r.name for r in target.roles]
+        })
+    finally:
+        session.close()

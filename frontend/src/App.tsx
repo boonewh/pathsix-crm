@@ -13,6 +13,9 @@ import LeadDetailPage from "@/pages/LeadDetailPage";
 import ClientDetailPage from "@/pages/ClientDetailPage";
 import CalendarPage from "@/pages/CalendarPage";
 import ProtectedLayout from "@/pages/ProtectedLayout";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 function App() {
   return (
@@ -20,6 +23,8 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedLayout />}>
@@ -34,6 +39,9 @@ function App() {
         <Route path="/clients/:id" element={<ClientDetailPage />} />
         <Route path="/leads/:id" element={<LeadDetailPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
       </Route>
       {/* Catch all */}
       <Route path="*" element={<NotFound />} />
