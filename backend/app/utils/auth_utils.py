@@ -18,7 +18,8 @@ def create_token(user: User) -> str:
         "sub": user.id,
         "email": user.email,
         "roles": [r.name for r in user.roles],
-        "exp": int(time.time()) + 7 * 86400  # 7 days
+        "exp": int(time.time()) + 30 * 86400  # 30 days
+
     }
     return jwt.encode(header, payload, current_app.config["SECRET_KEY"]).decode("utf-8")
 

@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+type AuthUser = {
+  id: number;
+  email: string;
+  roles: string[];
+};
+
 type AuthContextType = {
   token: string | null;
-  user: {
-    id: number;
-    email: string;
-    roles: string[];
-  } | null;
+  user: AuthUser | null;
   login: (newToken: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -17,27 +19,39 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [user, setUser] = useState<{
-    id: number;
-    email: string;
-    roles: string[];
-  } | null>(null);
 
+  // Initialize from localStorage
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const stored = localStorage.getItem("authUser");
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  // Login stores token and user in state and localStorage
   const login = (newToken: string) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
+    try {
+      const payload = JSON.parse(atob(newToken.split(".")[1]));
 
-    const payload = JSON.parse(atob(newToken.split(".")[1]));
-    setUser({
-      id: payload.sub,
-      email: payload.email,
-      roles: payload.roles,
-    });
+      const newUser: AuthUser = {
+        id: payload.sub,
+        email: payload.email,
+        roles: payload.roles,
+      };
+
+      localStorage.setItem("token", newToken);
+      localStorage.setItem("authUser", JSON.stringify(newUser));
+
+      setToken(newToken);
+      setUser(newUser);
+    } catch (error) {
+      console.error("Failed to parse JWT payload", error);
+    }
   };
 
+  // Logout clears everything
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("authUser");
     setToken(null);
     setUser(null);
     navigate("/login");
@@ -45,24 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!token;
 
-  useEffect(() => {
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setUser({
-          id: payload.sub,
-          email: payload.email,
-          roles: payload.roles,
-        });
-      } catch {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
-  }, [token]);
-
-  // Auto-logout on token expiration
+  // Auto-logout when token expires
   useEffect(() => {
     const interval = setInterval(() => {
       if (!token) return;
@@ -70,12 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         if (payload.exp * 1000 < Date.now()) {
+          console.warn("JWT expired, logging out");
           logout();
         }
       } catch (err) {
-        logout(); // fallback
+        console.warn("Failed to parse JWT, logging out");
+        logout();
       }
-    }, 60 * 1000);
+    }, 60 * 1000); // check every minute
 
     return () => clearInterval(interval);
   }, [token]);
