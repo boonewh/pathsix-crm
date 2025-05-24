@@ -11,6 +11,7 @@ interface EntityCardProps {
   onDelete?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
+  extraMenuItems?: ReactNode;
 }
 
 const EntityCard: FC<EntityCardProps> = ({
@@ -22,6 +23,7 @@ const EntityCard: FC<EntityCardProps> = ({
   onDelete,
   onSave,
   onCancel,
+  extraMenuItems,
 }) => {
   function confirmDelete() {
     if (window.confirm("Are you sure you want to delete this item?")) {
@@ -43,20 +45,20 @@ const EntityCard: FC<EntityCardProps> = ({
           )}
           {editing && (
             <div className="mt-2 flex gap-2">
-                <button
+              <button
                 onClick={onSave}
                 className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
+              >
                 Save
-                </button>
-                <button
+              </button>
+              <button
                 onClick={onCancel}
                 className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                >
+              >
                 Cancel
-                </button>
+              </button>
             </div>
-            )}
+          )}
         </div>
 
         <Menu as="div" className="relative inline-block text-left">
@@ -88,6 +90,11 @@ const EntityCard: FC<EntityCardProps> = ({
                     </button>
                   )}
                 </Menu.Item>
+              )}
+              {extraMenuItems && (
+                <div className="border-t border-gray-100 mt-1 pt-1">
+                  {extraMenuItems}
+                </div>
               )}
             </div>
           </Menu.Items>

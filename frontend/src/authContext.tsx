@@ -93,3 +93,8 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// ✅ Role check helper
+export function userHasRole(user: AuthUser | null, role: string): boolean {
+  return !!user?.roles?.includes(role);
+}

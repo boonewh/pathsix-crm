@@ -1,5 +1,7 @@
-fly.toml
-.git/
+app.db
+*.db
+*.sqlite
+*.sqlite3
 __pycache__/
-.envrc
-.venv/
+*.pyc
+.env

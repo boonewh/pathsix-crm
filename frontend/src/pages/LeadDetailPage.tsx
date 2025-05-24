@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Mail, Phone, MapPin, StickyNote, User, CalendarPlus, MoreVertical } from "lucide-react";
-import { useAuth } from "@/authContext";
+import { useAuth, userHasRole } from "@/authContext";
 import { Lead, Interaction } from "@/types";
 import { apiFetch } from "@/lib/api";
 
 export default function LeadDetailPage() {
   const { id } = useParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [lead, setLead] = useState<Lead | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [showInteractionForm, setShowInteractionForm] = useState(false);
@@ -22,6 +22,9 @@ export default function LeadDetailPage() {
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<{ id: number; email: string }[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   useEffect(() => {
     apiFetch(`/leads/${id}`, {
@@ -38,6 +41,14 @@ export default function LeadDetailPage() {
     })
       .then(res => res.json())
       .then(setInteractions);
+
+    if (userHasRole(user, "admin")) {
+      fetch("/api/users/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
+    }
   }, [id, token]);
 
   useEffect(() => {
@@ -162,148 +173,145 @@ export default function LeadDetailPage() {
         </li>
       </ul>
 
-      {/* Notes Section */}
       <details className="bg-white rounded shadow-sm border">
-        <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
-          <StickyNote size={16} /> Notes
-        </summary>
-        <div className="p-4">
-          {!lead.notes && !isEditingNote ? (
-            <div className="space-y-2">
-              <button
-                onClick={() => setIsEditingNote(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Add Note
-              </button>
-            </div>
-          ) : isEditingNote ? (
-            <div className="space-y-2">
-              <textarea
-                value={noteDraft}
-                onChange={(e) => setNoteDraft(e.target.value)}
-                rows={4}
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="Enter notes here"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={saveNote}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsEditingNote(false)}
-                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="relative border border-gray-200 rounded p-4 bg-white shadow-sm">
-              <p className="text-sm text-gray-800 whitespace-pre-wrap">{lead.notes}</p>
-              <div className="absolute top-2 right-2" ref={menuRef}>
-                <button onClick={() => setShowNoteMenu(prev => !prev)} className="text-gray-500 hover:text-gray-700">
-                  <MoreVertical size={16} />
-                </button>
-                {showNoteMenu && (
-                  <div className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-md z-10">
-                    <button
-                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                      onClick={() => {
-                        setIsEditingNote(true);
-                        setShowNoteMenu(false);
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      onClick={deleteNote}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </details>
-
-      {/* Interactions Section */}
-      <details className="bg-white rounded shadow-sm border">
-        <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
-          <CalendarPlus size={16} /> Interactions
-        </summary>
-        <div className="p-4 space-y-4">
-          {showInteractionForm && (
-            <div className="space-y-2 mb-4">
-              <input
-                type="datetime-local"
-                value={interactionForm.contact_date}
-                onChange={(e) => setInteractionForm({ ...interactionForm, contact_date: e.target.value })}
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="Contact Date"
-              />
-              <input
-                placeholder="Summary"
-                value={interactionForm.summary}
-                onChange={(e) => setInteractionForm({ ...interactionForm, summary: e.target.value })}
-                className="w-full border rounded px-2 py-1 text-sm"
-              />
-              <input
-                placeholder="Outcome"
-                value={interactionForm.outcome}
-                onChange={(e) => setInteractionForm({ ...interactionForm, outcome: e.target.value })}
-                className="w-full border rounded px-2 py-1 text-sm"
-              />
-              <textarea
-                placeholder="Notes"
-                value={interactionForm.notes}
-                onChange={(e) => setInteractionForm({ ...interactionForm, notes: e.target.value })}
-                className="w-full border rounded px-2 py-1 text-sm"
-                rows={3}
-              />
-              <input
-                type="datetime-local"
-                value={interactionForm.follow_up}
-                onChange={(e) => setInteractionForm({ ...interactionForm, follow_up: e.target.value })}
-                className="w-full border rounded px-2 py-1 text-sm"
-                placeholder="Follow-up Date"
-              />
-              <button
-                onClick={handleInteractionSubmit}
-                className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Save Interaction
-              </button>
-            </div>
-          )}
-
+  <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
+    <StickyNote size={16} /> Notes
+  </summary>
+  <div className="p-4">
+    {!lead.notes && !isEditingNote ? (
+      <div className="space-y-2">
+        <button
+          onClick={() => setIsEditingNote(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Add Note
+        </button>
+      </div>
+    ) : isEditingNote ? (
+      <div className="space-y-2">
+        <textarea
+          value={noteDraft}
+          onChange={(e) => setNoteDraft(e.target.value)}
+          rows={4}
+          className="w-full border rounded px-2 py-1 text-sm"
+          placeholder="Enter notes here"
+        />
+        <div className="flex gap-2">
           <button
-            onClick={() => setShowInteractionForm((prev) => !prev)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={saveNote}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            {showInteractionForm ? "Cancel" : "Add Interaction"}
+            Save
           </button>
-
-          <ul className="space-y-2">
-            {interactions.map((i) => (
-              <li key={i.id} className="border border-gray-300 p-4 rounded bg-white shadow-sm">
-                <p className="text-sm text-gray-700"><strong>{new Date(i.contact_date).toLocaleString()}</strong></p>
-                <p className="text-sm">{i.summary}</p>
-                {i.follow_up && (
-                  <p className="text-xs text-blue-600">Follow-up: {new Date(i.follow_up).toLocaleDateString()}</p>
-                )}
-                {i.notes && <p className="text-xs text-gray-500 mt-1">{i.notes}</p>}
-              </li>
-            ))}
-          </ul>
+          <button
+            onClick={() => setIsEditingNote(false)}
+            className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
         </div>
-      </details>
+      </div>
+    ) : (
+      <div className="relative border border-gray-200 rounded p-4 bg-white shadow-sm">
+        <p className="text-sm text-gray-800 whitespace-pre-wrap">{lead.notes}</p>
+        <div className="absolute top-2 right-2" ref={menuRef}>
+          <button onClick={() => setShowNoteMenu(prev => !prev)} className="text-gray-500 hover:text-gray-700">
+            <MoreVertical size={16} />
+          </button>
+          {showNoteMenu && (
+            <div className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-md z-10">
+              <button
+                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                onClick={() => {
+                  setIsEditingNote(true);
+                  setShowNoteMenu(false);
+                }}
+              >
+                Edit
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                onClick={deleteNote}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+</details>
+      <details className="bg-white rounded shadow-sm border">
+  <summary className="cursor-pointer px-4 py-2 font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-t flex items-center gap-2">
+    <CalendarPlus size={16} /> Interactions
+  </summary>
+  <div className="p-4 space-y-4">
+    {showInteractionForm && (
+      <div className="space-y-2 mb-4">
+        <input
+          type="datetime-local"
+          value={interactionForm.contact_date}
+          onChange={(e) => setInteractionForm({ ...interactionForm, contact_date: e.target.value })}
+          className="w-full border rounded px-2 py-1 text-sm"
+          placeholder="Contact Date"
+        />
+        <input
+          placeholder="Summary"
+          value={interactionForm.summary}
+          onChange={(e) => setInteractionForm({ ...interactionForm, summary: e.target.value })}
+          className="w-full border rounded px-2 py-1 text-sm"
+        />
+        <input
+          placeholder="Outcome"
+          value={interactionForm.outcome}
+          onChange={(e) => setInteractionForm({ ...interactionForm, outcome: e.target.value })}
+          className="w-full border rounded px-2 py-1 text-sm"
+        />
+        <textarea
+          placeholder="Notes"
+          value={interactionForm.notes}
+          onChange={(e) => setInteractionForm({ ...interactionForm, notes: e.target.value })}
+          className="w-full border rounded px-2 py-1 text-sm"
+          rows={3}
+        />
+        <input
+          type="datetime-local"
+          value={interactionForm.follow_up}
+          onChange={(e) => setInteractionForm({ ...interactionForm, follow_up: e.target.value })}
+          className="w-full border rounded px-2 py-1 text-sm"
+          placeholder="Follow-up Date"
+        />
+        <button
+          onClick={handleInteractionSubmit}
+          className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Save Interaction
+        </button>
+      </div>
+    )}
+
+    <button
+      onClick={() => setShowInteractionForm((prev) => !prev)}
+      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      {showInteractionForm ? "Cancel" : "Add Interaction"}
+    </button>
+
+    <ul className="space-y-2">
+      {interactions.map((i) => (
+        <li key={i.id} className="border border-gray-300 p-4 rounded bg-white shadow-sm">
+          <p className="text-sm text-gray-700"><strong>{new Date(i.contact_date).toLocaleString()}</strong></p>
+          <p className="text-sm">{i.summary}</p>
+          {i.follow_up && (
+            <p className="text-xs text-blue-600">Follow-up: {new Date(i.follow_up).toLocaleDateString()}</p>
+          )}
+          {i.notes && <p className="text-xs text-gray-500 mt-1">{i.notes}</p>}
+        </li>
+      ))}
+    </ul>
+  </div>
+</details>
 
       <button
         onClick={handleConvertToClient}
@@ -311,6 +319,68 @@ export default function LeadDetailPage() {
       >
         Convert to Client
       </button>
+
+      {userHasRole(user, "admin") && (
+        <button
+          onClick={() => setShowAssignModal(true)}
+          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+        >
+          Assign Lead
+        </button>
+      )}
+
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-4">Assign Lead</h2>
+
+            <select
+              value={selectedUserId || ""}
+              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              className="w-full border rounded px-3 py-2 mb-4"
+            >
+              <option value="">Select a user</option>
+              {availableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!selectedUserId}
+                onClick={async () => {
+                  const res = await apiFetch(`/leads/${id}/assign`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ assigned_to: selectedUserId }),
+                  });
+
+                  if (res.ok) {
+                    setShowAssignModal(false);
+                    window.location.reload();
+                  } else {
+                    alert("Failed to assign lead.");
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Assign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

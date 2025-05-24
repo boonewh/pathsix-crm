@@ -3,6 +3,7 @@ from datetime import datetime
 from app.models import Lead, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
+from sqlalchemy import or_, and_
 
 leads_bp = Blueprint("leads", __name__, url_prefix="/api/leads")
 
@@ -14,8 +15,14 @@ async def list_leads():
     try:
         leads = session.query(Lead).filter(
             Lead.tenant_id == user.tenant_id,
-            Lead.created_by == user.id,
-            Lead.deleted_at == None
+            Lead.deleted_at == None,
+            or_(
+                Lead.assigned_to == user.id,
+                and_(
+                    Lead.assigned_to == None,
+                    Lead.created_by == user.id
+                )
+            )
         ).all()
 
         return jsonify([
@@ -164,5 +171,32 @@ async def delete_lead(lead_id):
         lead.deleted_by = user.id
         session.commit()
         return jsonify({"message": "Lead soft-deleted successfully"})
+    finally:
+        session.close()
+
+@leads_bp.route("/<int:lead_id>/assign", methods=["PUT"])
+@requires_auth(roles=["admin"])
+async def assign_lead(lead_id):
+    user = request.user
+    data = await request.get_json()
+    assigned_to = data.get("assigned_to")
+
+    session = SessionLocal()
+    try:
+        lead = session.query(Lead).filter(
+            Lead.id == lead_id,
+            Lead.tenant_id == user.tenant_id,
+            Lead.deleted_at == None
+        ).first()
+
+        if not lead:
+            return jsonify({"error": "Lead not found"}), 404
+
+        lead.assigned_to = assigned_to
+        lead.updated_by = user.id
+        lead.updated_at = datetime.utcnow()
+
+        session.commit()
+        return jsonify({"message": "Lead assigned successfully"})
     finally:
         session.close()

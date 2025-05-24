@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import EntityCard from "@/components/ui/EntityCard";
 import { Mail, Phone, MapPin, Flag, User, StickyNote } from "lucide-react";
-import { useAuth } from "@/authContext";
+import { useAuth, userHasRole } from "@/authContext";
 import { Link } from "react-router-dom";
 import CompanyForm from "@/components/ui/CompanyForm";
 import { Lead } from "@/types";
@@ -24,24 +24,37 @@ export default function Leads() {
     status: "",
     notes: "",
   });
+  const { token, user } = useAuth();
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<{ id: number; email: string }[]>([]);
 
-  const { token } = useAuth();
 
-  useEffect(() => {
-    const fetchLeads = async () => {
-      try {
-        const res = await apiFetch("/leads/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setLeads(data);
-      } catch (err) {
-        setError("Failed to load leads");
-      }
-    };
+useEffect(() => {
+  const fetchLeads = async () => {
+    try {
+      const res = await apiFetch("/leads/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setLeads(data);
+    } catch (err) {
+      setError("Failed to load leads");
+    }
+  };
 
-    fetchLeads();
-  }, [token]);
+  fetchLeads();
+
+  // ✅ Add this after fetchLeads()
+  if (userHasRole(user, "admin")) {
+    fetch("/api/users/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
+  }
+}, [token]);
 
   const handleEdit = (lead: Lead) => {
     setCurrentlyEditingId(lead.id);
@@ -190,9 +203,85 @@ export default function Leads() {
                 )}
               </ul>
             }
+            extraMenuItems={
+              userHasRole(user, "admin") ? (
+                <button
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => {
+                    setSelectedLeadId(lead.id);
+                    setShowAssignModal(true);
+                  }}
+                >
+                  Assign
+                </button>
+              ) : null
+            }
           />
         ))}
       </ul>
+      
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-4">Assign Lead</h2>
+
+            <select
+              value={selectedUserId || ""}
+              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              className="w-full border rounded px-3 py-2 mb-4"
+            >
+              <option value="">Select a user</option>
+              {availableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setSelectedUserId(null);
+                  setSelectedLeadId(null);
+                }}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!selectedUserId}
+                onClick={async () => {
+                  const res = await apiFetch(`/leads/${selectedLeadId}/assign`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ assigned_to: selectedUserId }),
+                  });
+
+                  if (res.ok) {
+                    setShowAssignModal(false);
+                    setSelectedUserId(null);
+                    setSelectedLeadId(null);
+                    const updatedRes = await apiFetch("/leads/", {
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const fullData = await updatedRes.json();
+                    setLeads(fullData);
+                  } else {
+                    alert("Failed to assign lead.");
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Assign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

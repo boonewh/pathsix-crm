@@ -13,6 +13,12 @@ user_roles = Table(
     Column('role_id', Integer, ForeignKey('roles.id')),
 )
 
+class FollowUpStatus(enum.Enum):
+    pending = "pending"
+    contacted = "contacted"
+    completed = "completed"
+    rescheduled = "rescheduled"
+
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
@@ -97,6 +103,8 @@ class Lead(Base):
     zip = Column(String(20))
     notes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
+    assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
+    assigned_user = relationship("User", foreign_keys=[assigned_to])
 
     def __repr__(self):
         return f"<Lead {self.name}>"
@@ -135,6 +143,7 @@ class Interaction(Base):
     outcome = Column(String(255))
     notes = Column(Text)
     follow_up = Column(DateTime, nullable=True)
+    followup_status = Column(Enum(FollowUpStatus), default=FollowUpStatus.pending, nullable=False)
     summary = Column(String(255))
 
     lead = relationship("Lead", backref="interactions")
