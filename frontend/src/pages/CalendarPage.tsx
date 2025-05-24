@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
+import { Calendar } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -28,6 +29,7 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filterType, setFilterType] = useState<"all" | "client" | "lead">("all");
   const [loading, setLoading] = useState(true);
+  const calendarRef = useRef<FullCalendar>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +48,7 @@ export default function CalendarPage() {
 
       const eventList: CalendarEvent[] = filtered.map((i) => ({
         id: i.id.toString(),
-        title: `Follow-up: ${i.client_name || i.lead_name || "Unknown"}`,
+        title: `${i.client_name || i.lead_name || "Unknown"}`,
         start: i.follow_up!,
         extendedProps: {
           outcome: i.outcome,
@@ -127,14 +129,25 @@ export default function CalendarPage() {
       ? "text-red-600 font-semibold"
       : "text-blue-600 font-semibold";
 
-    return <div className={style}>{arg.event.title}</div>;
+    return (
+      <div className={`${style} truncate max-w-full overflow-hidden whitespace-nowrap`}>
+        {arg.event.title}
+      </div>
+    );
+  }
+
+  function handleDateClick(arg: any) {
+    const calendarApi = calendarRef.current?.getApi() as Calendar;
+    if (calendarApi) {
+      calendarApi.changeView("timeGridDay", arg.dateStr);
+    }
   }
 
   const isMobile = window.innerWidth < 768;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Follow-Up Calendar</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-4">Follow-Up Calendar</h1>
 
       <div className="mb-4">
         <label className="mr-2 font-semibold">Filter by:</label>
@@ -154,12 +167,14 @@ export default function CalendarPage() {
       ) : (
         <div className="overflow-x-auto">
           <FullCalendar
+            ref={calendarRef}
+            dateClick={handleDateClick}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView={isMobile ? "timeGridDay" : "dayGridMonth"}
             headerToolbar={{
               left: "prev,next today",
               center: "title",
-              right: "dayGridMonth,timeGridWeek,listDay",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             buttonText={{
               today: "Today",

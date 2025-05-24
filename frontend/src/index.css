@@ -84,3 +84,29 @@
     outline-offset: 2px;
   }
 }
+
+/* === FullCalendar responsive mobile layout === */
+@media (max-width: 640px) {
+  .fc-toolbar.fc-header-toolbar {
+    flex-direction: column !important;
+    align-items: start;
+  }
+
+  .fc-toolbar-title {
+    font-size: 1rem !important;
+  }
+
+  .fc-button {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+    margin: 0.125rem 0 !important;
+  }
+
+  .fc-event-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+}
+
