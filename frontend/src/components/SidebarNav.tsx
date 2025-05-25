@@ -170,7 +170,7 @@ export default function SidebarNav({
           ></div>
 
           {/* Sliding Sidebar */}
-          <div className="relative z-10 w-64 bg-neutral shadow-lg transform transition-transform duration-300 translate-x-0">
+          <div className="relative z-10 w-64 h-screen overflow-y-auto bg-neutral shadow-lg transform transition-transform duration-300 translate-x-0">
             <button
               onClick={closeMobile}
               className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
