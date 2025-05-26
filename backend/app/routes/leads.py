@@ -200,3 +200,60 @@ async def assign_lead(lead_id):
         return jsonify({"message": "Lead assigned successfully"})
     finally:
         session.close()
+
+@leads_bp.route("/all", methods=["GET"])
+@requires_auth(roles=["admin"])
+async def list_all_leads_admin():
+    user = request.user
+    session = SessionLocal()
+    try:
+        leads = session.query(Lead).filter(
+            Lead.tenant_id == user.tenant_id,
+            Lead.deleted_at == None
+        ).all()
+
+        return jsonify([{
+            "id": l.id,
+            "name": l.name,
+            "contact_person": l.contact_person,
+            "email": l.email,
+            "phone": l.phone,
+            "address": l.address,
+            "city": l.city,
+            "state": l.state,
+            "zip": l.zip,
+            "notes": l.notes,
+            "assigned_to": l.assigned_to,
+            "created_at": l.created_at.isoformat()
+        } for l in leads])
+    finally:
+        session.close()
+
+@leads_bp.route("/assigned", methods=["GET"])
+@requires_auth(roles=["admin"])
+async def list_assigned_leads():
+    user = request.user
+    session = SessionLocal()
+    try:
+        leads = session.query(Lead).filter(
+            Lead.tenant_id == user.tenant_id,
+            Lead.deleted_at == None,
+            Lead.assigned_to != None
+        ).all()
+
+        return jsonify([{
+            "id": l.id,
+            "name": l.name,
+            "contact_person": l.contact_person,
+            "email": l.email,
+            "phone": l.phone,
+            "address": l.address,
+            "city": l.city,
+            "state": l.state,
+            "zip": l.zip,
+            "notes": l.notes,
+            "assigned_to": l.assigned_to,
+            "created_at": l.created_at.isoformat()
+        } for l in leads])
+    finally:
+        session.close()

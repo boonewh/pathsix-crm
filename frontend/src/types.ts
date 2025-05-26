@@ -30,7 +30,7 @@ export type Interaction = {
   summary: string;
   outcome: string;
   notes: string;
-  follow_up?: string;
+  follow_up?: string | null; // ISO datetime string or null
   client_id?: number;
   lead_id?: number;
   client_name?: string;
@@ -39,6 +39,14 @@ export type Interaction = {
   email?: string;
   phone?: string;
   profile_link?: string;
+};
+
+export type InteractionFormData = {
+  contact_date: string;
+  summary: string;
+  outcome: string;
+  notes: string;
+  follow_up: string | null; 
 };
 
 export interface Lead {
@@ -54,6 +62,7 @@ export interface Lead {
   status: string;
   notes?: string;
   created_at: string;
+  assigned_to?: number;
 }
 
 export interface Project {

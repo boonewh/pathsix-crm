@@ -64,6 +64,7 @@ function SidebarContent({
             section: "Admin",
             items: [
               { label: "Users", path: "/admin/users", icon: Users },
+              { label: "Leads Overview", path: "/admin/leads", icon: UserPlus },
             ],
           },
         ]

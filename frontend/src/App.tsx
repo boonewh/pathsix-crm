@@ -16,6 +16,7 @@ import ProtectedLayout from "@/pages/ProtectedLayout";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import AdminLeadsPage from "./pages/AdminLeadsPage";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/admin/leads" element={<AdminLeadsPage />} />
       </Route>
       {/* Catch all */}
       <Route path="*" element={<NotFound />} />
