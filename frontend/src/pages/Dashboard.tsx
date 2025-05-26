@@ -142,9 +142,6 @@ export default function Dashboard() {
         </section>
       )}
 
-      <div className="bg-gray-200 text-center py-4 text-sm text-gray-600 rounded shadow-inner">
-        Tailwind is still working fine here too 👍
-      </div>
       {selectedInteraction && (
         <InteractionModal
           title={`Follow-up: ${selectedInteraction.client_name || selectedInteraction.lead_name}`}

@@ -173,3 +173,50 @@ async def transfer_interactions():
         })
     finally:
         session.close()
+
+@interactions_bp.route("/<int:interaction_id>/calendar.ics", methods=["GET"])
+async def get_interaction_ics(interaction_id):
+    from icalendar import Calendar, Event
+    from quart import Response
+    from app.database import SessionLocal
+    from app.models import Interaction
+
+    session = SessionLocal()
+    try:
+        interaction = session.query(Interaction).filter(
+            Interaction.id == interaction_id
+        ).first()
+
+        if not interaction:
+            return Response("Interaction not found", status=404)
+
+        if not interaction.follow_up:
+            return Response("This interaction has no follow-up date", status=400)
+
+        cal = Calendar()
+        cal.add("prodid", "-//PathSix CRM//EN")
+        cal.add("version", "2.0")
+
+        event = Event()
+        event.add("summary", f"Follow-up: {interaction.contact_person or 'CRM Interaction'}")
+        event.add("dtstart", interaction.follow_up)
+        event.add("dtend", interaction.follow_up)
+        event.add("dtstamp", interaction.contact_date)
+        event.add("description", f"Outcome: {interaction.outcome or ''}\nNotes: {interaction.notes or ''}")
+        event.add("location", f"Phone: {interaction.phone or ''}\nEmail: {interaction.email or ''}")
+        event["uid"] = f"interaction-{interaction.id}@pathsixcrm"
+
+        cal.add_component(event)
+
+        ics_content = cal.to_ical()
+
+        return Response(
+            ics_content,
+            content_type="text/calendar",
+            headers={
+                "Content-Disposition": f"attachment; filename=interaction-{interaction.id}.ics"
+            }
+        )
+    finally:
+        session.close()
+

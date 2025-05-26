@@ -10,6 +10,7 @@ interface InteractionModalProps {
   profile_link?: string;
   onClose: () => void;
   calendarLink?: string;
+  icsLink?: string;
 }
 
 export default function InteractionModal({
@@ -24,6 +25,7 @@ export default function InteractionModal({
   profile_link,
   onClose,
   calendarLink,
+  icsLink,
 }: InteractionModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -60,7 +62,7 @@ export default function InteractionModal({
           )}
         </div>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
           {calendarLink && (
             <a
               href={calendarLink}
@@ -69,6 +71,14 @@ export default function InteractionModal({
               className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
               Add to Google Calendar
+            </a>
+          )}
+          {icsLink && (
+            <a
+              href={icsLink}
+              className="text-sm bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
+            >
+              Apple / Outlook
             </a>
           )}
           <button

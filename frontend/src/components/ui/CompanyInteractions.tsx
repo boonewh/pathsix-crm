@@ -4,6 +4,7 @@ import { InteractionFormData, Interaction } from "@/types";
 import { apiFetch } from "@/lib/api";
 import InteractionForm from "@/components/ui/InteractionsForm";
 import InteractionModal from "@/components/ui/InteractionModal";
+import { generateGoogleCalendarUrl } from "@/lib/calendarUtils";
 
 type Props = {
   token: string;
@@ -68,7 +69,20 @@ export default function CompanyInteractions({
     });
 
     if (res.ok) {
-      await fetchUpdatedInteractions();
+      const { id: createdId } = await res.json();
+
+      const fetchRes = await apiFetch(`/interactions/?${entityType}_id=${entityId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (fetchRes.ok) {
+        const allInteractions = await fetchRes.json();
+        setInteractions(allInteractions);
+
+        const created = allInteractions.find((i: Interaction) => i.id === createdId);
+        setSelectedInteraction(created || null);
+      }
+
       resetForm();
       setShowForm(false);
       setEditingId(null);
@@ -76,6 +90,8 @@ export default function CompanyInteractions({
       alert("Failed to save interaction");
     }
   };
+
+
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this interaction?")) return;
@@ -218,6 +234,16 @@ export default function CompanyInteractions({
             phone={selectedInteraction.phone}
             profile_link={selectedInteraction.profile_link}
             onClose={() => setSelectedInteraction(null)}
+            calendarLink={
+              selectedInteraction.follow_up
+                ? generateGoogleCalendarUrl(selectedInteraction)
+                : undefined
+            }
+            icsLink={
+              selectedInteraction.follow_up
+                ? `/api/interactions/${selectedInteraction.id}/calendar.ics`
+                : undefined
+            }
           />
         )}
       </div>
