@@ -73,7 +73,7 @@ function SidebarContent({
 
   return (
     <div
-      className={`flex flex-col bg-neutral shadow-md border-r p-4 h-full transition-[width] duration-300 ease-in-out ${
+      className={`flex flex-col bg-neutral shadow-md border-r px-4 pt-4 pb-6 h-full transition-[width] duration-300 ease-in-out ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
@@ -83,7 +83,7 @@ function SidebarContent({
         ) : (
           <img
             src="/logo-all-seasons-foam.png"
-            alt="PathSix CRM"
+            alt="All Seasons Foam Logo"
             className="max-w-[180px] h-auto"
           />
         )}
@@ -139,6 +139,7 @@ function SidebarContent({
             })}
           </div>
         ))}
+        <div className="mt-auto h-8" />
       </nav>
     </div>
   );
