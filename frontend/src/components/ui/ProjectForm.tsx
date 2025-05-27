@@ -3,6 +3,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Project } from "@/types";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 interface SelectableEntity {
   id: number;
   name: string;
@@ -94,7 +97,9 @@ export default function ProjectForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="client_id">Client</Label>
+          <Label htmlFor="client_id">
+            {USE_ACCOUNT_LABELS ? "Account" : "Client"}
+          </Label>
           <select
             id="client_id"
             value={form.client_id || ""}
@@ -106,7 +111,9 @@ export default function ProjectForm({
             }
             className="border rounded px-2 py-1 text-sm"
           >
-            <option value="">-- Select Client --</option>
+            <option value="">
+              -- Select {USE_ACCOUNT_LABELS ? "Account" : "Client"} --
+            </option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

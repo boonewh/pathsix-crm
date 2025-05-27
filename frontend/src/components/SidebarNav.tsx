@@ -14,6 +14,10 @@ import {
   X,
 } from "lucide-react";
 
+// TEMP: All Seasons Foam uses "Accounts" instead of "Clients" and does not use multi-account section
+const USE_ACCOUNT_LABELS = true;
+const SHOW_REAL_ACCOUNTS_SECTION = false;
+
 interface SidebarNavProps {
   collapsed: boolean;
   toggleCollapsed: () => void;
@@ -36,14 +40,20 @@ function SidebarContent({
       items: [
         { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
         { label: "Leads", path: "/leads", icon: UserPlus },
-        { label: "Clients", path: "/clients", icon: Users },
+        {
+          label: USE_ACCOUNT_LABELS ? "Accounts" : "Clients",
+          path: "/clients",
+          icon: USE_ACCOUNT_LABELS ? Briefcase : Users,
+        },
         { label: "Calendar", path: "/calendar", icon: CalendarIcon },
       ],
     },
-    {
-      section: "Accounts",
-      items: [{ label: "Accounts", path: "/accounts", icon: Briefcase }],
-    },
+    ...(SHOW_REAL_ACCOUNTS_SECTION
+      ? [{
+          section: "Accounts",
+          items: [{ label: "Accounts", path: "/accounts", icon: Briefcase }],
+        }]
+      : []),
     {
       section: "Projects",
       items: [{ label: "Projects", path: "/projects", icon: FolderKanban }],

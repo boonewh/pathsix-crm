@@ -13,6 +13,9 @@ import { apiFetch } from "@/lib/api";
 import CompanyNotes from "@/components/ui/CompanyNotes";
 import CompanyInteractions from "@/components/ui/CompanyInteractions";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 export default function LeadDetailPage() {
   const { id } = useParams();
   const { token, user } = useAuth();
@@ -95,8 +98,9 @@ export default function LeadDetailPage() {
     if (!lead) return;
 
     const confirmed = confirm(
-      `Convert "${lead.name}" to a Client? This will delete the lead.`
+      `Convert "${lead.name}" to a ${USE_ACCOUNT_LABELS ? "Account" : "Client"}? This will delete the lead.`
     );
+
     if (!confirmed) return;
 
     const res = await apiFetch("/clients/", {
@@ -198,7 +202,7 @@ export default function LeadDetailPage() {
         onClick={handleConvertToClient}
         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
       >
-        Convert to Client
+        {`Convert to ${USE_ACCOUNT_LABELS ? "Account" : "Client"}`}
       </button>
 
       {userHasRole(user, "admin") && (

@@ -2,6 +2,9 @@ import { FC } from "react";
 import { Menu } from "@headlessui/react";
 import { MoreVertical } from "lucide-react";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 interface Client {
   id: number;
   name: string;
@@ -33,7 +36,7 @@ const ClientCard: FC<Props> = ({
   onDelete,
 }) => {
   function confirmDelete() {
-    if (window.confirm("Are you sure you want to delete this client?")) {
+    if (window.confirm(`Are you sure you want to delete this ${USE_ACCOUNT_LABELS ? "account" : "client"}?`)) {
       onDelete();
     }
   }

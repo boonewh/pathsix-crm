@@ -6,6 +6,9 @@ import InteractionForm from "@/components/ui/InteractionsForm";
 import InteractionModal from "@/components/ui/InteractionModal";
 import { generateGoogleCalendarUrl } from "@/lib/calendarUtils";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 type Props = {
   token: string;
   entityType: "lead" | "client";
@@ -224,7 +227,11 @@ export default function CompanyInteractions({
 
         {selectedInteraction && (
           <InteractionModal
-            title={`${entityType === "client" ? "Client" : "Lead"} Interaction`}
+            title={`${
+              entityType === "client"
+                ? USE_ACCOUNT_LABELS ? "Account" : "Client"
+                : "Lead"
+            } Interaction`}
             date={new Date(selectedInteraction.contact_date).toLocaleString()}
             outcome={selectedInteraction.outcome}
             summary={selectedInteraction.summary}

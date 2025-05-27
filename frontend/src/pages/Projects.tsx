@@ -6,6 +6,9 @@ import ProjectForm from "@/components/ui/ProjectForm";
 import { FormWrapper } from "@/components/ui/FormWrapper";
 import { apiFetch } from "@/lib/api";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 export default function Projects() {
   const { token } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -149,7 +152,9 @@ export default function Projects() {
                 {project.project_start && <li>Start: {new Date(project.project_start).toLocaleString()}</li>}
                 {project.project_end && <li>End: {new Date(project.project_end).toLocaleString()}</li>}
                 {project.project_worth && <li>Worth: ${project.project_worth}</li>}
-                {project.client_id && <li>Client ID: {project.client_id}</li>}
+                {project.client_id && (
+                  <li>{USE_ACCOUNT_LABELS ? "Account ID" : "Client ID"}: {project.client_id}</li>
+                )}
                 {project.lead_id && <li>Lead ID: {project.lead_id}</li>}
               </ul>
             }

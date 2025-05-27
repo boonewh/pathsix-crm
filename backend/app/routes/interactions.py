@@ -1,6 +1,6 @@
 from quart import Blueprint, request, jsonify
 from datetime import datetime
-from app.models import Interaction
+from app.models import Interaction, Client, Lead
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 
@@ -19,11 +19,25 @@ async def list_interactions():
             return jsonify({"error": "Cannot filter by both client_id and lead_id"}), 400
 
         from sqlalchemy.orm import joinedload
+        from sqlalchemy import or_, and_
 
         query = session.query(Interaction).options(
             joinedload(Interaction.client),
             joinedload(Interaction.lead)
         ).filter(Interaction.tenant_id == user.tenant_id)
+
+        # Only show interactions the user owns:
+        query = query.filter(
+            or_(
+                Interaction.client.has(Client.created_by == user.id),
+                Interaction.lead.has(
+                    or_(
+                        Lead.created_by == user.id,
+                        Lead.assigned_to == user.id
+                    )
+                )
+            )
+        )
 
         if client_id:
             query = query.filter(

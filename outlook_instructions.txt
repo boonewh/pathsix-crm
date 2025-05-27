@@ -1,0 +1,33 @@
+📱 iPhone: How to Use Outlook with .ics Calendar Files
+✅ Option 1: Link iPhone Calendar to Outlook
+Open Settings on your iPhone
+
+Scroll down and tap Calendar
+
+Tap Accounts
+
+Tap Add Account → choose Outlook.com
+
+Log in with your Outlook or Microsoft 365 account
+
+Make sure Calendars is toggled ON ✅
+
+📅 Now any .ics file you open will appear in your Outlook calendar as long as it's synced via the iOS calendar system.
+
+🟡 Option 2: Manually Open .ics File in Outlook App
+Tap the .ics file download link
+
+Tap Share (icon at bottom of screen)
+
+Choose Outlook from the share sheet
+
+Outlook will open and import the event
+
+This works even if the calendar isn't linked in iOS settings, but it's more steps.
+
+💡 Pro Tip:
+Once Outlook is added under iPhone Settings → Calendar → Accounts, you can:
+
+Set Outlook as your default calendar
+
+Get .ics events syncing automatically

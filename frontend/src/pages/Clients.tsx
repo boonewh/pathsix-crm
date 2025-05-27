@@ -7,6 +7,9 @@ import CompanyForm from "@/components/ui/CompanyForm";
 import { Client } from "@/types";
 import { apiFetch } from "@/lib/api";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 export default function Customers() {
   const [clients, setClients] = useState<Client[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -82,7 +85,9 @@ export default function Customers() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Clients</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {USE_ACCOUNT_LABELS ? "Accounts" : "Clients"}
+      </h1>
 
       {error && <p className="text-red-500">{error}</p>}
 
@@ -104,13 +109,13 @@ export default function Customers() {
         }}
         className="mb-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
       >
-        + New Client
+        {`+ New ${USE_ACCOUNT_LABELS ? "Account" : "Client"}`}
       </button>
 
       <ul className="space-y-4">
         {creating && (
           <EntityCard
-            title="New Client"
+            title={USE_ACCOUNT_LABELS ? "New Account" : "New Client"}
             editing
             onSave={handleSave}
             onCancel={handleCancel}

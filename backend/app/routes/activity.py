@@ -39,13 +39,19 @@ async def recent_activity():
             profile_link = None
 
             if entity_type == "client":
-                client = session.get(Client, entity_id)
+                client = session.query(Client).filter(
+                    Client.id == entity_id,
+                    Client.deleted_at == None
+                ).first()
                 if client:
                     name = client.name
                     profile_link = f"/clients/{client.id}"
 
             elif entity_type == "lead":
-                lead = session.get(Lead, entity_id)
+                lead = session.query(Lead).filter(
+                    Lead.id == entity_id,
+                    Lead.deleted_at == None
+                ).first()
                 if lead:
                     name = lead.name
                     profile_link = f"/leads/{lead.id}"
@@ -61,7 +67,7 @@ async def recent_activity():
 
             elif entity_type == "account":
                 account = session.get(Account, entity_id)
-                if account and account.client:
+                if account and account.client and account.client.deleted_at is None:
                     name = account.account_name or account.account_number
                     profile_link = f"/clients/{account.client.id}"
 
@@ -73,7 +79,7 @@ async def recent_activity():
                     "last_touched": last_touched.isoformat(),
                     "profile_link": profile_link
                 })
-
+                
         return jsonify(output)
 
     finally:

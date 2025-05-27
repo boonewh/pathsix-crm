@@ -9,6 +9,9 @@ import InteractionModal from "@/components/ui/InteractionModal";
 import { Interaction } from "@/types";
 import { apiFetch } from "@/lib/api";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 interface CalendarEvent {
   id: string;
   title: string;
@@ -157,7 +160,7 @@ export default function CalendarPage() {
           className="border rounded px-2 py-1"
         >
           <option value="all">All</option>
-          <option value="client">Clients Only</option>
+          <option value="client">{USE_ACCOUNT_LABELS ? "Accounts Only" : "Clients Only"}</option>
           <option value="lead">Leads Only</option>
         </select>
       </div>

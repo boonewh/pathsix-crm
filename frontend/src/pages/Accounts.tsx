@@ -6,6 +6,9 @@ import EntityCard from "@/components/ui/EntityCard";
 import { FormWrapper } from "@/components/ui/FormWrapper";
 import { apiFetch } from "@/lib/api";
 
+// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
+const USE_ACCOUNT_LABELS = true;
+
 interface SelectableEntity {
   id: number;
   name: string;
@@ -154,7 +157,11 @@ export default function Accounts() {
                 {account.opened_on && (
                   <li>Opened: {new Date(account.opened_on).toLocaleDateString()}</li>
                 )}
-                {account.client_id && <li>Client ID: {account.client_id}</li>}
+                {account.client_id && (
+                  <li>
+                    {USE_ACCOUNT_LABELS ? "Account Owner ID" : "Client ID"}: {account.client_id}
+                  </li>
+                )}
                 {account.notes && <li>Notes: {account.notes}</li>}
               </ul>
             }
