@@ -31,6 +31,8 @@ export default function LeadDetailPage() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!id) return;
+
     apiFetch(`/leads/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -38,7 +40,8 @@ export default function LeadDetailPage() {
       .then(data => {
         setLead(data);
         setNoteDraft(data.notes || "");
-      });
+      })
+      .catch(err => console.error("Error loading lead:", err));
 
     apiFetch(`/interactions/?lead_id=${id}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -54,6 +57,7 @@ export default function LeadDetailPage() {
         .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
     }
   }, [id, token]);
+
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
