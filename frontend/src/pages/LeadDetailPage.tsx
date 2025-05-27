@@ -33,30 +33,51 @@ export default function LeadDetailPage() {
   useEffect(() => {
     if (!id) return;
 
+    // Fetch lead details
     apiFetch(`/leads/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load lead");
+        return res.json();
+      })
+      .then((data) => {
         setLead(data);
         setNoteDraft(data.notes || "");
       })
-      .catch(err => console.error("Error loading lead:", err));
+      .catch((err) => {
+        console.error("Error loading lead:", err);
+      });
 
+    // Fetch interactions
     apiFetch(`/interactions/?lead_id=${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(setInteractions);
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load interactions");
+        return res.json();
+      })
+      .then(setInteractions)
+      .catch((err) => {
+        console.error("Error loading interactions:", err);
+      });
 
+    // Fetch assignable users if admin
     if (userHasRole(user, "admin")) {
       fetch("/api/users/", {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((res) => res.json())
-        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load users");
+          return res.json();
+        })
+        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)))
+        .catch((err) => {
+          console.error("Error loading users:", err);
+        });
     }
-  }, [id, token]);
+  }, [id, token, user]);
+
 
 
   useEffect(() => {
@@ -145,6 +166,8 @@ export default function LeadDetailPage() {
       alert("Failed to convert lead to client");
     }
   };
+
+  if (!id) return <p className="p-6 text-red-600">Invalid lead ID.</p>;
 
   if (!lead) return <p className="p-6">Loading...</p>;
 
