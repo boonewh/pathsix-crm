@@ -13,6 +13,7 @@ import { apiFetch } from "@/lib/api";
 import CompanyNotes from "@/components/ui/CompanyNotes";
 import CompanyInteractions from "@/components/ui/CompanyInteractions";
 
+
 // TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
 const USE_ACCOUNT_LABELS = true;
 
