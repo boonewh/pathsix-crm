@@ -6,7 +6,6 @@ import InteractionForm from "@/components/ui/InteractionsForm";
 import InteractionModal from "@/components/ui/InteractionModal";
 import { generateGoogleCalendarUrl } from "@/lib/calendarUtils";
 
-// TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
 const USE_ACCOUNT_LABELS = true;
 
 type Props = {
@@ -94,8 +93,6 @@ export default function CompanyInteractions({
     }
   };
 
-
-
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this interaction?")) return;
 
@@ -116,7 +113,12 @@ export default function CompanyInteractions({
   }, [initialInteractions]);
 
   useEffect(() => {
-    const handleClickOutside = () => setOpenMenuId(null);
+    const handleClickOutside = (e: MouseEvent) => {
+      const menu = document.getElementById("kabob-menu");
+      if (menu && !menu.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -189,11 +191,12 @@ export default function CompanyInteractions({
                 </button>
 
                 {openMenuId === i.id && (
-                  <div className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-md z-10">
+                  <div id="kabob-menu" className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-md z-50">
                     <button
                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log("Edit clicked", i);
                         setForm({
                           contact_date: i.contact_date,
                           summary: i.summary,
@@ -212,6 +215,7 @@ export default function CompanyInteractions({
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log("Delete clicked", i.id);
                         handleDelete(i.id);
                         setOpenMenuId(null);
                       }}
