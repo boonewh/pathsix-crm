@@ -195,7 +195,6 @@ async def transfer_interactions():
 
 
 @interactions_bp.route("/<int:interaction_id>/calendar.ics", methods=["GET"])
-@requires_auth()
 async def get_interaction_ics(interaction_id):
     session = SessionLocal()
     try:
