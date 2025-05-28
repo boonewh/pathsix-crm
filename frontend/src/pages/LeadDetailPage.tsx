@@ -4,7 +4,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  StickyNote,
   User,
 } from "lucide-react";
 import { useAuth, userHasRole } from "@/authContext";

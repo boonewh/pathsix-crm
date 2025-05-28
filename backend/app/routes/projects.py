@@ -1,6 +1,6 @@
 from quart import Blueprint, request, jsonify
 from datetime import datetime
-from app.models import Project
+from app.models import Project, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 

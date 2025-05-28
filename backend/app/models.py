@@ -49,9 +49,9 @@ class Client(Base):
     tenant_id = Column(Integer, nullable=False)
     created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
     updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-    deleted_at = Column(DateTime, nullable=True)
     deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+    assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
+
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -62,10 +62,18 @@ class Client(Base):
     zip = Column(String(20))
     status = Column(String(50), default='new')
     notes = Column(Text)
+
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    assigned_user = relationship("User", foreign_keys=[assigned_to])
+    created_by_user = relationship("User", foreign_keys=[created_by])
 
     def __repr__(self):
         return f"<Client {self.name}>"
+
 
 class Account(Base):
     __tablename__ = 'accounts'
@@ -93,6 +101,7 @@ class Lead(Base):
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True)
     deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -104,7 +113,10 @@ class Lead(Base):
     notes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
+
     assigned_user = relationship("User", foreign_keys=[assigned_to])
+    created_by_user = relationship("User", foreign_keys=[created_by])
+
 
     def __repr__(self):
         return f"<Lead {self.name}>"

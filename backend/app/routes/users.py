@@ -16,7 +16,7 @@ async def list_users():
         def get_roles(u):
             return [r.name for r in u.roles]
 
-        return jsonify([
+        response = jsonify([
             {
                 "id": u.id,
                 "email": u.email,
@@ -26,6 +26,8 @@ async def list_users():
             }
             for u in users
         ])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
 
@@ -46,6 +48,11 @@ async def create_user():
         if session.query(User).filter_by(email=email).first():
             return jsonify({"error": "User already exists"}), 400
 
+        roles = session.query(Role).filter(Role.name.in_(role_names)).all()
+
+        if not roles and role_names:
+            return jsonify({"error": "One or more roles not found"}), 400
+
         new_user = User(
             tenant_id=user.tenant_id,
             email=email,
@@ -53,7 +60,6 @@ async def create_user():
             is_active=True
         )
 
-        roles = session.query(Role).filter(Role.name.in_(role_names)).all()
         new_user.roles.extend(roles)
 
         session.add(new_user)
@@ -84,6 +90,9 @@ async def toggle_user_active(user_id):
         if not target:
             return jsonify({"error": "User not found"}), 404
 
+        if user.id == target.id:
+            return jsonify({"error": "You cannot deactivate yourself"}), 403
+
         target.is_active = not target.is_active
         session.commit()
 
@@ -112,7 +121,11 @@ async def update_user_roles(user_id):
             return jsonify({"error": "User not found"}), 404
 
         roles = session.query(Role).filter(Role.name.in_(new_roles)).all()
-        target.roles = roles  # Replace all roles
+
+        if not roles and new_roles:
+            return jsonify({"error": "One or more roles not found"}), 400
+
+        target.roles = roles
         session.commit()
 
         return jsonify({

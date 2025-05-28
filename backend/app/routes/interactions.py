@@ -1,10 +1,15 @@
-from quart import Blueprint, request, jsonify
+from quart import Blueprint, request, jsonify, Response
 from datetime import datetime
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_, and_
+from icalendar import Calendar, Event
+
 from app.models import Interaction, Client, Lead
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 
 interactions_bp = Blueprint("interactions", __name__, url_prefix="/api/interactions")
+
 
 @interactions_bp.route("/", methods=["GET"])
 @requires_auth()
@@ -18,15 +23,11 @@ async def list_interactions():
         if client_id and lead_id:
             return jsonify({"error": "Cannot filter by both client_id and lead_id"}), 400
 
-        from sqlalchemy.orm import joinedload
-        from sqlalchemy import or_, and_
-
         query = session.query(Interaction).options(
             joinedload(Interaction.client),
             joinedload(Interaction.lead)
         ).filter(Interaction.tenant_id == user.tenant_id)
 
-        # Only show interactions the user owns:
         query = query.filter(
             or_(
                 Interaction.client.has(Client.created_by == user.id),
@@ -52,7 +53,7 @@ async def list_interactions():
 
         interactions = query.order_by(Interaction.contact_date.desc()).all()
 
-        return jsonify([
+        response = jsonify([
             {
                 "id": i.id,
                 "contact_date": i.contact_date.isoformat(),
@@ -70,8 +71,11 @@ async def list_interactions():
                 "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
             } for i in interactions
         ])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
+
 
 @interactions_bp.route("/", methods=["POST"])
 @requires_auth()
@@ -80,7 +84,6 @@ async def create_interaction():
     user = request.user
     session = SessionLocal()
     try:
-        # Enforce: must link to one and only one of client or lead
         if bool(data.get("client_id")) == bool(data.get("lead_id")):
             return jsonify({"error": "Interaction must link to either client_id or lead_id, not both or neither."}), 400
 
@@ -105,6 +108,7 @@ async def create_interaction():
     finally:
         session.close()
 
+
 @interactions_bp.route("/<int:interaction_id>", methods=["PUT"])
 @requires_auth()
 async def update_interaction(interaction_id):
@@ -125,16 +129,17 @@ async def update_interaction(interaction_id):
             "notes", "follow_up", "contact_person", "email", "phone"
         ]:
             if field in data:
-                if field in ["contact_date", "follow_up"] and data[field]:
-                    setattr(interaction, field, datetime.fromisoformat(data[field]))
+                if field in ["contact_date", "follow_up"]:
+                    setattr(interaction, field, datetime.fromisoformat(data[field]) if data[field] else None)
                 else:
-                    setattr(interaction, field, data[field])
+                    setattr(interaction, field, data[field] or None)
 
         session.commit()
         session.refresh(interaction)
         return jsonify({"id": interaction.id})
     finally:
         session.close()
+
 
 @interactions_bp.route("/<int:interaction_id>", methods=["DELETE"])
 @requires_auth()
@@ -156,6 +161,7 @@ async def delete_interaction(interaction_id):
     finally:
         session.close()
 
+
 @interactions_bp.route("/transfer", methods=["POST"])
 @requires_auth()
 async def transfer_interactions():
@@ -169,7 +175,6 @@ async def transfer_interactions():
 
     session = SessionLocal()
     try:
-        # Only transfer interactions owned by the tenant
         interactions = session.query(Interaction).filter(
             Interaction.tenant_id == user.tenant_id,
             Interaction.lead_id == from_lead_id
@@ -188,13 +193,10 @@ async def transfer_interactions():
     finally:
         session.close()
 
-@interactions_bp.route("/<int:interaction_id>/calendar.ics", methods=["GET"])
-async def get_interaction_ics(interaction_id):
-    from icalendar import Calendar, Event
-    from quart import Response
-    from app.database import SessionLocal
-    from app.models import Interaction
 
+@interactions_bp.route("/<int:interaction_id>/calendar.ics", methods=["GET"])
+@requires_auth()
+async def get_interaction_ics(interaction_id):
     session = SessionLocal()
     try:
         interaction = session.query(Interaction).filter(
@@ -221,7 +223,6 @@ async def get_interaction_ics(interaction_id):
         event["uid"] = f"interaction-{interaction.id}@pathsixcrm"
 
         cal.add_component(event)
-
         ics_content = cal.to_ical()
 
         return Response(
@@ -233,4 +234,3 @@ async def get_interaction_ics(interaction_id):
         )
     finally:
         session.close()
-

@@ -18,7 +18,7 @@ async def list_clients():
             Client.deleted_at == None
         ).all()
 
-        return jsonify([
+        response = jsonify([
             {
                 "id": c.id,
                 "name": c.name,
@@ -33,8 +33,11 @@ async def list_clients():
                 "created_at": c.created_at.isoformat()
             } for c in clients
         ])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
+
 
 @clients_bp.route("/", methods=["POST"])
 @requires_auth()
@@ -47,9 +50,14 @@ async def create_client():
             tenant_id=user.tenant_id,
             created_by=user.id,
             name=data["name"],
+            contact_person=data.get("contact_person"),
             email=data.get("email"),
             phone=data.get("phone"),
-            address=data.get("address")
+            address=data.get("address"),
+            city=data.get("city"),
+            state=data.get("state"),
+            zip=data.get("zip"),
+            notes=data.get("notes"),
         )
         session.add(client)
         session.commit()
@@ -87,7 +95,7 @@ async def get_client(client_id):
         session.commit()
         session.refresh(client)
 
-        return jsonify({
+        response = jsonify({
             "id": client.id,
             "name": client.name,
             "email": client.email,
@@ -100,6 +108,8 @@ async def get_client(client_id):
             "notes": client.notes,
             "created_at": client.created_at.isoformat()
         })
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
 
@@ -112,7 +122,8 @@ async def update_client(client_id):
     try:
         client = session.query(Client).filter(
             Client.id == client_id,
-            Client.tenant_id == user.tenant_id
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at == None
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
@@ -154,3 +165,32 @@ async def delete_client(client_id):
     finally:
         session.close()
 
+@clients_bp.route("/<int:client_id>/assign", methods=["PUT"])
+@requires_auth(roles=["admin"])
+async def assign_client(client_id):
+    user = request.user
+    data = await request.get_json()
+    assigned_to = data.get("assigned_to")
+
+    if not assigned_to:
+        return jsonify({"error": "Missing assigned_to"}), 400
+
+    session = SessionLocal()
+    try:
+        client = session.query(Client).filter(
+            Client.id == client_id,
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at == None
+        ).first()
+
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
+
+        client.assigned_to = assigned_to
+        client.updated_by = user.id
+        client.updated_at = datetime.utcnow()
+
+        session.commit()
+        return jsonify({"message": "Client assigned successfully"})
+    finally:
+        session.close()

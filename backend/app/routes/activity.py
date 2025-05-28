@@ -12,6 +12,9 @@ async def recent_activity():
     user = request.user
     session = SessionLocal()
     try:
+        limit = int(request.args.get("limit", 10))
+        limit = min(limit, 50)
+
         # Get most recent log per entity_type + entity_id for this user
         subquery = (
             session.query(
@@ -28,7 +31,7 @@ async def recent_activity():
             subquery.c.entity_type,
             subquery.c.entity_id,
             subquery.c.last_touched
-        ).order_by(desc(subquery.c.last_touched)).limit(10).all()
+        ).order_by(desc(subquery.c.last_touched)).limit(limit).all()
 
         output = []
         for row in results:
@@ -41,6 +44,7 @@ async def recent_activity():
             if entity_type == "client":
                 client = session.query(Client).filter(
                     Client.id == entity_id,
+                    Client.tenant_id == user.tenant_id,
                     Client.deleted_at == None
                 ).first()
                 if client:
@@ -50,6 +54,7 @@ async def recent_activity():
             elif entity_type == "lead":
                 lead = session.query(Lead).filter(
                     Lead.id == entity_id,
+                    Lead.tenant_id == user.tenant_id,
                     Lead.deleted_at == None
                 ).first()
                 if lead:
@@ -57,7 +62,10 @@ async def recent_activity():
                     profile_link = f"/leads/{lead.id}"
 
             elif entity_type == "project":
-                project = session.get(Project, entity_id)
+                project = session.query(Project).filter(
+                    Project.id == entity_id,
+                    Project.tenant_id == user.tenant_id
+                ).first()
                 if project:
                     name = project.project_name
                     if project.client_id:
@@ -66,8 +74,11 @@ async def recent_activity():
                         profile_link = f"/leads/{project.lead_id}"
 
             elif entity_type == "account":
-                account = session.get(Account, entity_id)
-                if account and account.client and account.client.deleted_at is None:
+                account = session.query(Account).filter(
+                    Account.id == entity_id,
+                    Account.tenant_id == user.tenant_id
+                ).first()
+                if account and account.client and account.client.tenant_id == user.tenant_id and account.client.deleted_at is None:
                     name = account.account_name or account.account_number
                     profile_link = f"/clients/{account.client.id}"
 
@@ -79,8 +90,11 @@ async def recent_activity():
                     "last_touched": last_touched.isoformat(),
                     "profile_link": profile_link
                 })
-                
-        return jsonify(output)
+
+        response = jsonify(output)
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     finally:
         session.close()
+

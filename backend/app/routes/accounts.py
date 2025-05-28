@@ -1,6 +1,6 @@
 from quart import Blueprint, request, jsonify
 from datetime import datetime
-from app.models import Account
+from app.models import Account, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 
@@ -13,7 +13,8 @@ async def list_accounts():
     session = SessionLocal()
     try:
         accounts = session.query(Account).filter(Account.tenant_id == user.tenant_id).all()
-        return jsonify([
+
+        response = jsonify([
             {
                 "id": a.id,
                 "client_id": a.client_id,
@@ -24,6 +25,8 @@ async def list_accounts():
                 "notes": a.notes
             } for a in accounts
         ])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
 
@@ -34,6 +37,9 @@ async def create_account():
     data = await request.get_json()
     session = SessionLocal()
     try:
+        if not data.get("client_id") or not data.get("account_number"):
+            return jsonify({"error": "client_id and account_number are required"}), 400
+
         account = Account(
             tenant_id=user.tenant_id,
             client_id=data["client_id"],
@@ -80,7 +86,10 @@ async def update_account(account_id):
                 setattr(account, field, data[field])
 
         if "opened_on" in data and data["opened_on"]:
-            account.opened_on = datetime.fromisoformat(data["opened_on"])
+            try:
+                account.opened_on = datetime.fromisoformat(data["opened_on"])
+            except ValueError:
+                return jsonify({"error": "Invalid opened_on format"}), 400
 
         session.commit()
         session.refresh(account)
@@ -126,8 +135,6 @@ async def get_account(account_id):
         if not account:
             return jsonify({"error": "Account not found"}), 404
 
-        from app.models import ActivityLog, ActivityType
-
         log = ActivityLog(
             tenant_id=user.tenant_id,
             user_id=user.id,
@@ -139,7 +146,7 @@ async def get_account(account_id):
         session.add(log)
         session.commit()
 
-        return jsonify({
+        response = jsonify({
             "id": account.id,
             "account_name": account.account_name,
             "account_number": account.account_number,
@@ -148,6 +155,7 @@ async def get_account(account_id):
             "client_id": account.client_id,
             "opened_on": account.opened_on.isoformat() if account.opened_on else None
         })
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
-

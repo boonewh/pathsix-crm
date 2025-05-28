@@ -17,7 +17,7 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api")
 async def login():
     data = await request.get_json()
 
-    email = data.get("email")
+    email = data.get("email", "").lower().strip()
     password = data.get("password")
 
     if not email or not password:
@@ -31,7 +31,7 @@ async def login():
 
         token = create_token(user)
 
-        return jsonify({
+        response = jsonify({
             "user": {
                 "id": user.id,
                 "email": user.email,
@@ -39,13 +39,15 @@ async def login():
             },
             "token": token
         })
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
 
 @auth_bp.route("/forgot-password", methods=["POST"])
 async def forgot_password():
     data = await request.get_json()
-    email = data.get("email")
+    email = data.get("email", "").lower().strip()
     if not email:
         return jsonify({"error": "Missing email"}), 400
 
@@ -62,7 +64,7 @@ async def forgot_password():
             subject="Password Reset Request",
             recipient=email,
             body=f"Click to reset your password: {reset_link}"
-)
+        )
         print("Reset link:", reset_link)
 
         return jsonify({"message": "If that account exists, a reset email was sent."})
@@ -117,16 +119,3 @@ async def change_password():
         return jsonify({"message": "Password changed successfully"})
     finally:
         session.close()
-
-@auth_bp.route("/test-email", methods=["GET"])
-async def test_email():
-    try:
-        await send_email(
-            subject="Test Email from PathSix CRM",
-            recipient="boonewh@gmail.com",
-            body="🎉 This is a test email from your backend!"
-        )
-        return jsonify({"message": "Test email sent!"})
-    except Exception as e:
-        print("Email error:", e)
-        return jsonify({"error": str(e)}), 500

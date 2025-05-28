@@ -7,6 +7,7 @@ from sqlalchemy import or_, and_
 
 leads_bp = Blueprint("leads", __name__, url_prefix="/api/leads")
 
+
 @leads_bp.route("/", methods=["GET"])
 @requires_auth()
 async def list_leads():
@@ -25,7 +26,7 @@ async def list_leads():
             )
         ).all()
 
-        return jsonify([
+        response = jsonify([
             {
                 "id": l.id,
                 "name": l.name,
@@ -37,11 +38,20 @@ async def list_leads():
                 "state": l.state,
                 "zip": l.zip,
                 "notes": l.notes,
-                "created_at": l.created_at.isoformat()
+                "created_at": l.created_at.isoformat(),
+                "assigned_to": l.assigned_to,
+                "assigned_to_name": (
+                    l.assigned_user.email if l.assigned_user
+                    else l.created_by_user.email if l.created_by_user
+                    else None
+                )
             } for l in leads
         ])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
+
 
 @leads_bp.route("/", methods=["POST"])
 @requires_auth()
@@ -71,6 +81,7 @@ async def create_lead():
     finally:
         session.close()
 
+
 @leads_bp.route("/<int:lead_id>", methods=["GET"])
 @requires_auth()
 async def get_lead(lead_id):
@@ -87,7 +98,6 @@ async def get_lead(lead_id):
         if not lead:
             return jsonify({"error": "Lead not found"}), 404
 
-        # ✅ Log the view
         log = ActivityLog(
             tenant_id=user.tenant_id,
             user_id=user.id,
@@ -97,11 +107,9 @@ async def get_lead(lead_id):
             description=f"Viewed lead '{lead.name}'"
         )
         session.add(log)
-
         session.commit()
-        session.refresh(lead)
 
-        return jsonify({
+        response = jsonify({
             "id": lead.id,
             "name": lead.name,
             "contact_person": lead.contact_person,
@@ -114,6 +122,8 @@ async def get_lead(lead_id):
             "notes": lead.notes,
             "created_at": lead.created_at.isoformat()
         })
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
 
@@ -140,7 +150,7 @@ async def update_lead(lead_id):
             "address", "city", "state", "zip", "notes"
         ]:
             if field in data:
-                setattr(lead, field, data[field])
+                setattr(lead, field, data[field] or None)
 
         lead.updated_by = user.id
         lead.updated_at = datetime.utcnow()
@@ -150,6 +160,7 @@ async def update_lead(lead_id):
         return jsonify({"id": lead.id})
     finally:
         session.close()
+
 
 @leads_bp.route("/<int:lead_id>", methods=["DELETE"])
 @requires_auth()
@@ -173,6 +184,7 @@ async def delete_lead(lead_id):
         return jsonify({"message": "Lead soft-deleted successfully"})
     finally:
         session.close()
+
 
 @leads_bp.route("/<int:lead_id>/assign", methods=["PUT"])
 @requires_auth(roles=["admin"])
@@ -201,6 +213,7 @@ async def assign_lead(lead_id):
     finally:
         session.close()
 
+
 @leads_bp.route("/all", methods=["GET"])
 @requires_auth(roles=["admin"])
 async def list_all_leads_admin():
@@ -212,7 +225,7 @@ async def list_all_leads_admin():
             Lead.deleted_at == None
         ).all()
 
-        return jsonify([{
+        response = jsonify([{
             "id": l.id,
             "name": l.name,
             "contact_person": l.contact_person,
@@ -226,8 +239,11 @@ async def list_all_leads_admin():
             "assigned_to": l.assigned_to,
             "created_at": l.created_at.isoformat()
         } for l in leads])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
+
 
 @leads_bp.route("/assigned", methods=["GET"])
 @requires_auth(roles=["admin"])
@@ -241,7 +257,7 @@ async def list_assigned_leads():
             Lead.assigned_to != None
         ).all()
 
-        return jsonify([{
+        response = jsonify([{
             "id": l.id,
             "name": l.name,
             "contact_person": l.contact_person,
@@ -255,5 +271,7 @@ async def list_assigned_leads():
             "assigned_to": l.assigned_to,
             "created_at": l.created_at.isoformat()
         } for l in leads])
+        response.headers["Cache-Control"] = "no-store"
+        return response
     finally:
         session.close()
