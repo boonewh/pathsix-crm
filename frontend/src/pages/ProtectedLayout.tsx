@@ -3,6 +3,7 @@ import { useAuth } from "@/authContext";
 import { useState, useEffect, useRef } from "react";
 import SidebarNav from "@/components/SidebarNav";
 import { apiFetch } from "@/lib/api";
+import { Link } from "react-router-dom";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, logout, token } = useAuth();
@@ -90,18 +91,47 @@ export default function ProtectedLayout() {
 
             {showResults && results.length > 0 && (
               <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-50 max-h-64 overflow-y-auto text-sm">
-                {results.map((r) => (
-                  <a
-                    key={`${r.type}-${r.id}`}
-                    href={r.link}
-                    className="block px-4 py-2 hover:bg-gray-100 text-gray-800"
-                    onClick={() => setShowResults(false)}
-                  >
-                    <span className="font-medium capitalize">{r.type}</span>: {r.name}
-                  </a>
+                {Object.entries(
+                  results.reduce((acc: Record<string, any[]>, r) => {
+                    acc[r.type] = acc[r.type] || [];
+                    acc[r.type].push(r);
+                    return acc;
+                  }, {})
+                ).map(([type, entries]) => (
+                  <div key={type}>
+                    <div className="px-4 py-2 font-semibold text-gray-500 uppercase text-xs border-b bg-gray-50">
+                      {type}s
+                    </div>
+                    {entries.map((r) =>
+                      r.link ? (
+                        <Link
+                          key={`${r.type}-${r.id}`}
+                          to={r.link}
+                          className="block px-4 py-2 hover:bg-gray-100 text-gray-800"
+                          onClick={() => setShowResults(false)}
+                        >
+                          <div className="font-medium">{r.name}</div>
+                          <div className="text-xs text-gray-500">
+                            Matched on: {r.matches.join(", ")}
+                          </div>
+                        </Link>
+                      ) : (
+                        <div
+                          key={`${r.type}-${r.id}`}
+                          className="block px-4 py-2 text-gray-400 cursor-not-allowed"
+                        >
+                          <div className="font-medium">{r.name}</div>
+                          <div className="text-xs text-gray-400">
+                            Matched on: {r.matches.join(", ")}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
                 ))}
               </div>
             )}
+
           </div>
 
           <button

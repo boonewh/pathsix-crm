@@ -17,33 +17,36 @@ export default function Projects() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
   const [leads, setLeads] = useState<{ id: number; name: string }[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Fetch all projects
   useEffect(() => {
-    apiFetch("/projects/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then(setProjects);
-  }, [token]);
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const [projRes, clientRes, leadRes] = await Promise.all([
+          apiFetch("/projects/", { headers: { Authorization: `Bearer ${token}` } }),
+          apiFetch("/clients/", { headers: { Authorization: `Bearer ${token}` } }),
+          apiFetch("/leads/", { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-  // Fetch clients and leads for dropdowns
-  useEffect(() => {
-    apiFetch("/clients/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) =>
-        setClients(data.map((c: any) => ({ id: c.id, name: c.name })))
-      );
+        const projects = await projRes.json();
+        const clients = await clientRes.json();
+        const leads = await leadRes.json();
 
-    apiFetch("/leads/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) =>
-        setLeads(data.map((l: any) => ({ id: l.id, name: l.name })))
-      );
+        setProjects(projects.sort((a: Project, b: Project) =>
+          new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()
+        ));
+        setClients(clients.map((c: any) => ({ id: c.id, name: c.name })));
+        setLeads(leads.map((l: any) => ({ id: l.id, name: l.name })));
+      } catch (err) {
+        setError("Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
   }, [token]);
 
   const resetForm = () => {
@@ -54,9 +57,7 @@ export default function Projects() {
 
   const handleSave = async () => {
     const method = creating ? "POST" : "PUT";
-    const url = creating
-      ? "/projects/"
-      : `/projects/${editingId}`;
+    const url = creating ? "/projects/" : `/projects/${editingId}`;
 
     const res = await apiFetch(url, {
       method,
@@ -92,6 +93,9 @@ export default function Projects() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Projects</h1>
+
+      {error && <p className="text-red-500">{error}</p>}
+      {loading && <p className="text-gray-500">Loading...</p>}
 
       <button
         onClick={() => {
@@ -149,13 +153,17 @@ export default function Projects() {
               <ul className="text-sm text-gray-700 space-y-1">
                 {project.project_description && <li>{project.project_description}</li>}
                 {project.project_status && <li>Status: {project.project_status}</li>}
-                {project.project_start && <li>Start: {new Date(project.project_start).toLocaleString()}</li>}
-                {project.project_end && <li>End: {new Date(project.project_end).toLocaleString()}</li>}
-                {project.project_worth && <li>Worth: ${project.project_worth}</li>}
-                {project.client_id && (
-                  <li>{USE_ACCOUNT_LABELS ? "Account ID" : "Client ID"}: {project.client_id}</li>
+                {project.project_start && (
+                  <li>Start: {new Date(project.project_start).toLocaleString()}</li>
                 )}
-                {project.lead_id && <li>Lead ID: {project.lead_id}</li>}
+                {project.project_end && (
+                  <li>End: {new Date(project.project_end).toLocaleString()}</li>
+                )}
+                {project.project_worth && <li>Worth: ${project.project_worth}</li>}
+                {project.client_name && (
+                  <li>{USE_ACCOUNT_LABELS ? "Account" : "Client"}: {project.client_name}</li>
+                )}
+                {project.lead_name && <li>Lead: {project.lead_name}</li>}
               </ul>
             }
           />

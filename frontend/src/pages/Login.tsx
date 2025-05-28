@@ -1,40 +1,48 @@
+import { useState } from "react";
+import { useAuth } from "@/authContext";
+import { useNavigate } from "react-router-dom";
 import { FormWrapper } from "@/components/ui/FormWrapper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useAuth } from "@/authContext";
-import { useNavigate } from "react-router-dom";
-import { apiFetch } from "@/lib/api"; 
+import { apiFetch } from "@/lib/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await apiFetch("/login", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
-        login(data.token);         // Save token to localStorage + context
-        navigate("/dashboard");    // Redirect to dashboard
+        login(data.token);
+        navigate("/dashboard");
       } else {
         alert(data.error || "Login failed");
       }
     } catch (err) {
       alert("Server error");
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted px-4">
@@ -67,8 +75,8 @@ export default function Login() {
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Log In
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Logging in..." : "Log In"}
             </Button>
 
             <div className="text-right mt-1">

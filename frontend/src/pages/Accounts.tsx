@@ -159,7 +159,9 @@ export default function Accounts() {
                 )}
                 {account.client_id && (
                   <li>
-                    {USE_ACCOUNT_LABELS ? "Account Owner ID" : "Client ID"}: {account.client_id}
+                    {account.client_name
+                      ? <li>{USE_ACCOUNT_LABELS ? "Owner" : "Client"}: {account.client_name}</li>
+                      : <li>{USE_ACCOUNT_LABELS ? "Owner ID" : "Client ID"}: {account.client_id}</li>}
                   </li>
                 )}
                 {account.notes && <li>Notes: {account.notes}</li>}

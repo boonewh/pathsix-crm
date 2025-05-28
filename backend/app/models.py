@@ -123,6 +123,7 @@ class Lead(Base):
 
 class Project(Base):
     __tablename__ = 'projects'
+
     id = Column(Integer, primary_key=True)
     lead_id = Column(Integer, ForeignKey('leads.id'), nullable=True)
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
@@ -138,9 +139,12 @@ class Project(Base):
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
     last_updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
 
+    # ✅ Relationships to access names in API
+    client = relationship("Client", backref="projects")
+    lead = relationship("Lead", backref="projects")
+
     def __repr__(self):
         return f"<Project {self.project_name}>"
-
 class Interaction(Base):
     __tablename__ = 'interactions'
 

@@ -191,3 +191,13 @@ Would you like to start implementing this piece-by-piece, maybe with the follow-
  Manage system-wide settings (like roles or API tokens)
 
  Manage billing and subscriptions (if you ever make it paid)
+ 
+
+✨ Optional Improvements for ForgotPasswordPage.tsx
+  If you want to polish a bit:
+
+  Add a loading state to disable the button while submitting (prevents double clicks).
+
+  Normalize error messages in case the backend returns HTML or unexpected formats.
+
+  Replace <a href="/login"> with <Link to="/login"> from react-router-dom for SPA routing.

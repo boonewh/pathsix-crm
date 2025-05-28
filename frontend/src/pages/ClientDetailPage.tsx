@@ -20,23 +20,39 @@ export default function ClientDetailPage() {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [_accounts, setAccounts] = useState<Account[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    apiFetch(`/clients/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.json())
-      .then(data => {
+    const loadClient = async () => {
+      try {
+        const res = await apiFetch(`/clients/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Client not found");
+        const data = await res.json();
         setClient(data);
         setAccounts(data.accounts || []);
-      });
+      } catch (err: any) {
+        setLoadError(err.message || "Failed to load client");
+      }
+    };
 
-    apiFetch(`/interactions/?client_id=${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => res.json())
-      .then(setInteractions);
+    const loadInteractions = async () => {
+      try {
+        const res = await apiFetch(`/interactions/?client_id=${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setInteractions(data);
+      } catch {
+        // Optional: handle interaction error here too
+      }
+    };
+
+    loadClient();
+    loadInteractions();
   }, [id, token]);
+
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -48,6 +64,7 @@ export default function ClientDetailPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  if (loadError) return <p className="p-6 text-red-600">{loadError}</p>;
   if (!client) return <p className="p-6">Loading...</p>;
 
   return (

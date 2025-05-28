@@ -38,33 +38,42 @@ export default function Customers() {
   }, [token]);
 
   const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this client?")) return;
+
     const res = await apiFetch(`/clients/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.ok) setClients((prev) => prev.filter((c) => c.id !== id));
-    else alert("Failed to delete client");
+
+    if (res.ok) {
+      setClients((prev) => prev.filter((c) => c.id !== id));
+    } else {
+      alert("Failed to delete client");
+    }
   };
 
   const handleSave = async () => {
-    const method = creating ? "POST" : "PUT";
-    const url = creating ? "/clients/" : `/clients/${editingId}`;
+    try {
+      const method = creating ? "POST" : "PUT";
+      const url = creating ? "/clients/" : `/clients/${editingId}`;
 
-    const res = await apiFetch(url, {
-      method,
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(form),
-    });
+      const res = await apiFetch(url, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(form),
+      });
 
-    if (!res.ok) return alert("Failed to save client");
+      if (!res.ok) throw new Error("Failed to save client");
 
-    const updatedRes = await apiFetch("/clients/", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const fullData = await updatedRes.json();
-    setClients(fullData);
-
-    handleCancel();
+      const updatedRes = await apiFetch("/clients/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const fullData = await updatedRes.json();
+      setClients(fullData);
+      handleCancel();
+    } catch (err: any) {
+      setError(err.message || "Failed to save client");
+    }
   };
 
   const handleCancel = () => {

@@ -19,6 +19,11 @@ export default function ChangePasswordPage() {
       return;
     }
 
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+
     const res = await fetch("/api/change-password", {
       method: "POST",
       headers: {
@@ -37,8 +42,12 @@ export default function ChangePasswordPage() {
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      const data = await res.json();
-      setError(data.error || "Password change failed");
+      let message = "Password change failed";
+      try {
+        const data = await res.json();
+        message = data.error || message;
+      } catch {}
+      setError(message);
     }
   };
 

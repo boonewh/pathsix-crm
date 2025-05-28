@@ -1,6 +1,7 @@
 export interface Account {
   id: number;
   client_id: number;
+  client_name?: string;
   tenant_id: number;
   account_number: string;
   account_name?: string;
@@ -63,21 +64,20 @@ export interface Lead {
   notes?: string;
   created_at: string;
   assigned_to?: number;
+  assigned_to_name?: string;
 }
 
 export interface Project {
   id: number;
-  tenant_id: number;
   project_name: string;
   project_description?: string;
-  project_status: string;
-  project_start?: string; // ISO datetime string
+  project_status?: string;
+  project_start?: string;
   project_end?: string;
   project_worth?: number;
   client_id?: number;
   lead_id?: number;
-  created_by: number;
-  created_at: string;
-  updated_at?: string;
-  last_updated_by?: number;
+  client_name?: string;
+  lead_name?: string;
+  created_at?: string;
 }

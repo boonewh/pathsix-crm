@@ -194,3 +194,27 @@ async def assign_client(client_id):
         return jsonify({"message": "Client assigned successfully"})
     finally:
         session.close()
+
+@clients_bp.route("/all", methods=["GET"])
+@requires_auth(roles=["admin"])
+async def list_all_clients():
+    user = request.user
+    session = SessionLocal()
+    try:
+        clients = session.query(Client).filter(
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at == None
+        ).all()
+
+        return jsonify([
+            {
+                "id": c.id,
+                "name": c.name,
+                "email": c.email,
+                "phone": c.phone,
+                "contact_person": c.contact_person,
+                "created_by": c.created_by,  # optional
+            } for c in clients
+        ])
+    finally:
+        session.close()

@@ -39,22 +39,32 @@ export default function Dashboard() {
 
   const now = new Date();
 
-  const followUpsToday = interactions.filter(
-    (i) => i.follow_up && isToday(parseISO(i.follow_up))
-  );
+  const parsedFollowUps = interactions
+    .filter((i) => i.follow_up)
+    .map((i) => ({
+      ...i,
+      parsedFollowUp: parseISO(i.follow_up!),
+    }));
 
-  const upcomingFollowUps = interactions.filter(
-    (i) =>
-      i.follow_up &&
-      isWithinInterval(parseISO(i.follow_up), {
-        start: now,
-        end: addDays(now, 7),
-      })
-  );
+  const followUpsToday = parsedFollowUps
+    .filter((i) => isToday(i.parsedFollowUp))
+    .sort((a, b) => a.parsedFollowUp.getTime() - b.parsedFollowUp.getTime());
 
-  const overdueFollowUps = interactions.filter(
-    (i) => i.follow_up && isBefore(parseISO(i.follow_up), now)
-  );
+  const overdueFollowUps = parsedFollowUps
+    .filter(
+      (i) => isBefore(i.parsedFollowUp, now) && !isToday(i.parsedFollowUp)
+    )
+    .sort((a, b) => a.parsedFollowUp.getTime() - b.parsedFollowUp.getTime());
+
+  const upcomingFollowUps = parsedFollowUps
+    .filter(
+      (i) =>
+        isWithinInterval(i.parsedFollowUp, {
+          start: addDays(now, 1),
+          end: addDays(now, 7),
+        })
+    )
+    .sort((a, b) => a.parsedFollowUp.getTime() - b.parsedFollowUp.getTime());
 
   return (
     <div className="p-6 space-y-8">

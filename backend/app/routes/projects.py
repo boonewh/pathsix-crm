@@ -3,6 +3,7 @@ from datetime import datetime
 from app.models import Project, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
+from sqlalchemy.orm import joinedload
 
 projects_bp = Blueprint("projects", __name__, url_prefix="/api/projects")
 
@@ -12,7 +13,11 @@ async def list_projects():
     user = request.user
     session = SessionLocal()
     try:
-        projects = session.query(Project).filter(Project.tenant_id == user.tenant_id).all()
+        projects = session.query(Project).options(
+            joinedload(Project.client),
+            joinedload(Project.lead)
+        ).filter(Project.tenant_id == user.tenant_id).all()
+
         return jsonify([
             {
                 "id": p.id,
@@ -24,7 +29,9 @@ async def list_projects():
                 "project_worth": p.project_worth,
                 "client_id": p.client_id,
                 "lead_id": p.lead_id,
-                "created_at": p.created_at.isoformat()
+                "client_name": p.client.name if p.client else None,
+                "lead_name": p.lead.name if p.lead else None,
+                "created_at": p.created_at.isoformat() if p.created_at else None
             } for p in projects
         ])
     finally:
@@ -36,7 +43,10 @@ async def get_project(project_id):
     user = request.user
     session = SessionLocal()
     try:
-        project = session.query(Project).filter(
+        project = session.query(Project).options(
+            joinedload(Project.client),
+            joinedload(Project.lead)
+        ).filter(
             Project.id == project_id,
             Project.tenant_id == user.tenant_id
         ).first()
@@ -65,12 +75,13 @@ async def get_project(project_id):
             "project_worth": project.project_worth,
             "client_id": project.client_id,
             "lead_id": project.lead_id,
+            "client_name": project.client.name if project.client else None,
+            "lead_name": project.lead.name if project.lead else None,
             "created_by": project.created_by,
-            "created_at": project.created_at.isoformat()
+            "created_at": project.created_at.isoformat() if project.created_at else None,
         })
     finally:
         session.close()
-
 
 @projects_bp.route("/", methods=["POST"])
 @requires_auth()
@@ -95,10 +106,14 @@ async def create_project():
         session.add(project)
         session.commit()
         session.refresh(project)
+        session.refresh(project.client)
+        session.refresh(project.lead)
         return jsonify({
             "id": project.id,
             "project_name": project.project_name,
-            "project_status": project.project_status
+            "project_status": project.project_status,
+            "client_name": project.client.name if project.client else None,
+            "lead_name": project.lead.name if project.lead else None,
         }), 201
     finally:
         session.close()
@@ -136,10 +151,14 @@ async def update_project(project_id):
 
         session.commit()
         session.refresh(project)
+        session.refresh(project.client)
+        session.refresh(project.lead)
         return jsonify({
             "id": project.id,
             "project_name": project.project_name,
-            "project_status": project.project_status
+            "project_status": project.project_status,
+            "client_name": project.client.name if project.client else None,
+            "lead_name": project.lead.name if project.lead else None,
         })
     finally:
         session.close()

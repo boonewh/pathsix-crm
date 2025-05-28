@@ -3,6 +3,7 @@ from datetime import datetime
 from app.models import Account, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
+from sqlalchemy.orm import joinedload
 
 accounts_bp = Blueprint("accounts", __name__, url_prefix="/api/accounts")
 
@@ -12,12 +13,17 @@ async def list_accounts():
     user = request.user
     session = SessionLocal()
     try:
-        accounts = session.query(Account).filter(Account.tenant_id == user.tenant_id).all()
+        accounts = session.query(Account).options(
+            joinedload(Account.client)
+        ).filter(
+            Account.tenant_id == user.tenant_id
+        ).all()
 
         response = jsonify([
             {
                 "id": a.id,
                 "client_id": a.client_id,
+                "client_name": a.client.name if a.client else None,
                 "account_number": a.account_number,
                 "account_name": a.account_name,
                 "status": a.status,
