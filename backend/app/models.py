@@ -185,3 +185,30 @@ class ActivityLog(Base):
 
     def __repr__(self):
         return f"<ActivityLog {self.action.value} {self.entity_type} {self.entity_id}>"
+
+class ChatMessage(Base):
+    __tablename__ = 'chat_messages'
+
+    id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
+
+    sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    recipient_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # null for room chats
+
+    room = Column(String(100), nullable=True)  # null for direct messages
+    client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
+    lead_id = Column(Integer, ForeignKey('leads.id'), nullable=True)
+
+    content = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False)
+
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+
+    sender = relationship("User", foreign_keys=[sender_id])
+    recipient = relationship("User", foreign_keys=[recipient_id])
+    client = relationship("Client", backref="chat_messages")
+    lead = relationship("Lead", backref="chat_messages")
+
+    def __repr__(self):
+        target = self.room or self.recipient_id
+        return f"<ChatMessage from {self.sender_id} to {target}>"
