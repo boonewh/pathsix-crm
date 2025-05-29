@@ -51,7 +51,6 @@ class Client(Base):
     updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
     deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
     assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
-
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -62,7 +61,6 @@ class Client(Base):
     zip = Column(String(20))
     status = Column(String(50), default='new')
     notes = Column(Text)
-
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True)
@@ -101,7 +99,6 @@ class Lead(Base):
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True)
     deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
-
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
     email = Column(String(120), index=True)
@@ -195,17 +192,13 @@ class ChatMessage(Base):
 
     id = Column(Integer, primary_key=True)
     tenant_id = Column(Integer, nullable=False, index=True)
-
     sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     recipient_id = Column(Integer, ForeignKey('users.id'), nullable=True)  # null for room chats
-
     room = Column(String(100), nullable=True)  # null for direct messages
     client_id = Column(Integer, ForeignKey('clients.id'), nullable=True)
     lead_id = Column(Integer, ForeignKey('leads.id'), nullable=True)
-
     content = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
-
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
 
     sender = relationship("User", foreign_keys=[sender_id])
@@ -216,3 +209,17 @@ class ChatMessage(Base):
     def __repr__(self):
         target = self.room or self.recipient_id
         return f"<ChatMessage from {self.sender_id} to {target}>"
+
+class Message(Base):
+    __tablename__ = 'messages'
+
+    id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
+    sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    receiver_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    body = Column(Text, nullable=False)
+    sent_at = Column(DateTime, default=datetime.utcnow)
+    read = Column(Boolean, default=False)
+
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
