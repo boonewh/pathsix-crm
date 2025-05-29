@@ -71,7 +71,10 @@ export default function LeadDetailPage() {
           if (!res.ok) throw new Error("Failed to load users");
           return res.json();
         })
-        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)))
+        .then((data) => {
+          console.log("Fetched users:", data); // 👈 Add this line
+          setAvailableUsers(data.filter((u: any) => u.is_active));
+        })
         .catch((err) => {
           console.error("Error loading users:", err);
         });
