@@ -64,7 +64,7 @@ export default function LeadDetailPage() {
 
     // Fetch assignable users if admin
     if (userHasRole(user, "admin")) {
-      fetch("/api/users/", {
+      apiFetch("/users/", {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {
