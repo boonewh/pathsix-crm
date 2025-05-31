@@ -21,6 +21,8 @@ export default function AdminUsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const [editingUserId, setEditingUserId] = useState<number | null>(null);
+  const [editedEmail, setEditedEmail] = useState<string>("");
 
   useEffect(() => {
     apiFetch("/users/", {
@@ -104,6 +106,28 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleSaveEmail = async (id: number) => {
+    const res = await apiFetch(`/users/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: editedEmail }),
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, email: updated.email } : u))
+      );
+      setEditingUserId(null);
+      setEditedEmail("");
+    } else {
+      const { error } = await res.json();
+      alert(error || "Failed to update email");
+    }
+  };
 
   const activeUsers = users.filter((u) => u.is_active);
   const inactiveUsers = users.filter((u) => !u.is_active);
@@ -162,7 +186,16 @@ export default function AdminUsersPage() {
             className="p-4 border border-gray-200 rounded bg-white shadow-sm flex justify-between items-center"
           >
             <div>
-              <p className="font-medium">{user.email}</p>
+              {editingUserId === user.id ? (
+                <input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  className="border px-2 py-1 rounded w-full"
+                />
+              ) : (
+                <p className="font-medium">{user.email}</p>
+              )}
               <div className="text-sm">
                 <span
                   className={`inline-block px-2 py-0.5 text-xs rounded ${
@@ -213,6 +246,24 @@ export default function AdminUsersPage() {
                   >
                     {user.is_active ? "Deactivate" : "Reactivate"}
                   </button>
+                  {editingUserId === user.id ? (
+                    <button
+                      onClick={() => handleSaveEmail(user.id)}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-600"
+                    >
+                      Save Email
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setEditingUserId(user.id);
+                        setEditedEmail(user.email);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-indigo-600"
+                    >
+                      Edit Email
+                    </button>
+                  )}
                 </div>
               )}
             </div>

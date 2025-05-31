@@ -17,7 +17,7 @@ interface InteractionCardProps {
 const InteractionCard: React.FC<InteractionCardProps> = ({ interaction, onEdit, onDelete }) => {
   function generateGoogleCalendarUrl(i: Interaction): string {
     const title = encodeURIComponent(`Follow-up: ${i.client_name || i.lead_name || "Unknown"}`);
-    const details = encodeURIComponent(`Notes: ${i.notes || ""}\nOutcome: ${i.outcome || ""}`);
+    const details = encodeURIComponent(`Notes: ${i.notes || ""}\nNext Step: ${i.outcome || ""}`);
     const start = new Date(i.follow_up!).toISOString().replace(/[-:]|\.\d{3}/g, "");
     const end = start;
 
@@ -35,7 +35,12 @@ const InteractionCard: React.FC<InteractionCardProps> = ({ interaction, onEdit, 
         )}
       </div>
 
-      <p className="mt-2 font-semibold text-gray-800">{interaction.outcome}</p>
+      {interaction.outcome && (
+        <p className="text-sm mt-2 text-gray-800">
+          <strong>Next Step:</strong> {interaction.outcome}
+        </p>
+      )}
+
       {interaction.notes && <p className="text-sm text-gray-700 mt-1">{interaction.notes}</p>}
 
       {interaction.follow_up && (

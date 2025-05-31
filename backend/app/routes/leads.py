@@ -237,7 +237,8 @@ async def list_all_leads_admin():
             "zip": l.zip,
             "notes": l.notes,
             "assigned_to": l.assigned_to,
-            "created_at": l.created_at.isoformat()
+            "created_at": l.created_at.isoformat(),
+            "created_by_name": l.created_by_user.email if l.created_by_user else None,
         } for l in leads])
         response.headers["Cache-Control"] = "no-store"
         return response

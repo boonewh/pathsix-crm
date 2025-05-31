@@ -126,7 +126,7 @@ export default function LeadDetailPage() {
     if (!lead) return;
 
     const confirmed = confirm(
-      `Convert "${lead.name}" to a ${USE_ACCOUNT_LABELS ? "Account" : "Client"}? This will delete the lead.`
+      `Convert "${lead.name}" to a ${USE_ACCOUNT_LABELS ? "Account" : "Client"}? This will permanently change the lead to an account.`
     );
 
     if (!confirmed) return;

@@ -65,6 +65,7 @@ export interface Lead {
   created_at: string;
   assigned_to?: number;
   assigned_to_name?: string;
+  created_by_name?: string;
 }
 
 export interface Project {

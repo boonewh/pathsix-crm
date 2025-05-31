@@ -171,13 +171,22 @@ export default function CompanyInteractions({
                     : "Missing date"}
                 </strong>
               </p>
+
               <p className="text-sm">{i.summary}</p>
+
+              {i.notes && <p className="text-xs text-gray-500 mt-1">{i.notes}</p>}
+
               {i.follow_up && (
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-blue-600 mt-1">
                   Follow-up: {new Date(i.follow_up).toLocaleDateString()}
                 </p>
               )}
-              {i.notes && <p className="text-xs text-gray-500 mt-1">{i.notes}</p>}
+
+              {i.outcome && (
+                <p className="text-xs text-gray-700 mt-1">
+                  <strong>Next Step:</strong> {i.outcome}
+                </p>
+              )}
 
               <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
                 <button
@@ -196,7 +205,6 @@ export default function CompanyInteractions({
                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("Edit clicked", i);
                         setForm({
                           contact_date: i.contact_date,
                           summary: i.summary,
@@ -215,7 +223,6 @@ export default function CompanyInteractions({
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("Delete clicked", i.id);
                         handleDelete(i.id);
                         setOpenMenuId(null);
                       }}

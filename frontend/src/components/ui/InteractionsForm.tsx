@@ -19,12 +19,6 @@ export default function InteractionForm(props: InteractionFormProps) {
         onChange={(e) => updateForm({ ...form, summary: e.target.value })}
         className="w-full border rounded px-2 py-1 text-sm"
       />
-      <input
-        placeholder="Outcome"
-        value={form.outcome}
-        onChange={(e) => updateForm({ ...form, outcome: e.target.value })}
-        className="w-full border rounded px-2 py-1 text-sm"
-      />
       <textarea
         placeholder="Notes"
         value={form.notes}
@@ -37,6 +31,12 @@ export default function InteractionForm(props: InteractionFormProps) {
         type="datetime-local"
         value={form.follow_up ?? ""}
         onChange={(e) => updateForm({ ...form, follow_up: e.target.value })}
+        className="w-full border rounded px-2 py-1 text-sm"
+      />
+      <input
+        placeholder="Next Step"
+        value={form.outcome}
+        onChange={(e) => updateForm({ ...form, outcome: e.target.value })}
         className="w-full border rounded px-2 py-1 text-sm"
       />
       <div className="flex gap-2">

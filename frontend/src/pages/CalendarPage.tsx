@@ -195,7 +195,7 @@ export default function CalendarPage() {
           />
         </div>
       )}
-
+      
       {selectedEvent && (
         <InteractionModal
           title={selectedEvent.title}
@@ -208,6 +208,7 @@ export default function CalendarPage() {
           profile_link={selectedEvent.extendedProps.profile_link}
           onClose={() => setSelectedEvent(null)}
           calendarLink={generateGoogleCalendarUrl(selectedEvent)}
+          icsLink={`/api/interactions/${selectedEvent.id}/calendar.ics`}  // 👈 Add this line
         />
       )}
     </div>

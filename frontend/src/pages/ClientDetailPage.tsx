@@ -6,7 +6,7 @@ import {
   MapPin,
   User,
 } from "lucide-react";
-import { useAuth } from "@/authContext";
+import { useAuth, userHasRole } from "@/authContext";
 import { Client, Interaction, Account } from "@/types";
 import { apiFetch } from "@/lib/api";
 import CompanyNotes from "@/components/ui/CompanyNotes";
@@ -14,13 +14,17 @@ import CompanyInteractions from "@/components/ui/CompanyInteractions";
 
 export default function ClientDetailPage() {
   const { id } = useParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [client, setClient] = useState<Client | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [_accounts, setAccounts] = useState<Account[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const [loadError, setLoadError] = useState("");
+
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<{ id: number; email: string }[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadClient = async () => {
@@ -51,8 +55,23 @@ export default function ClientDetailPage() {
 
     loadClient();
     loadInteractions();
-  }, [id, token]);
 
+    if (userHasRole(user, "admin")) {
+      apiFetch("/users/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to load users");
+          return res.json();
+        })
+        .then((data) => {
+          setAvailableUsers(data.filter((u: any) => u.is_active));
+        })
+        .catch((err) => {
+          console.error("Error loading users:", err);
+        });
+    }
+  }, [id, token]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -68,62 +87,126 @@ export default function ClientDetailPage() {
   if (!client) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">{client.name}</h1>
+    <>
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold">{client.name}</h1>
 
-      <ul className="text-sm text-gray-700 space-y-1">
-        {client.contact_person && (
-          <li className="flex items-center gap-2">
-            <User size={14} /> {client.contact_person}
+        <ul className="text-sm text-gray-700 space-y-1">
+          {client.contact_person && (
+            <li className="flex items-center gap-2">
+              <User size={14} /> {client.contact_person}
+            </li>
+          )}
+          {client.email && (
+            <li className="flex items-center gap-2">
+              <Mail size={14} />
+              <a href={`mailto:${client.email}`} className="text-blue-600 underline">
+                {client.email}
+              </a>
+            </li>
+          )}
+          {client.phone && (
+            <li className="flex items-center gap-2">
+              <Phone size={14} />
+              <a href={`tel:${client.phone}`} className="text-blue-600 underline">
+                {client.phone}
+              </a>
+            </li>
+          )}
+          <li className="flex items-start gap-2">
+            <MapPin size={14} className="mt-[2px]" />
+            <div className="leading-tight">
+              {client.address && <div>{client.address}</div>}
+              <div>{[client.city, client.state].filter(Boolean).join(", ")} {client.zip}</div>
+            </div>
           </li>
+        </ul>
+
+        <CompanyInteractions
+          token={token!}
+          entityType="client"
+          entityId={client.id}
+          initialInteractions={interactions}
+        />
+
+        <CompanyNotes
+          notes={client.notes || ""}
+          onSave={async (newNotes) => {
+            const res = await apiFetch(`/clients/${id}`, {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ notes: newNotes }),
+            });
+            if (res.ok) {
+              setClient((prev) => prev && { ...prev, notes: newNotes });
+            } else {
+              alert("Failed to save notes.");
+            }
+          }}
+        />
+
+        {userHasRole(user, "admin") && (
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+          >
+            Assign Client
+          </button>
         )}
-        {client.email && (
-          <li className="flex items-center gap-2">
-            <Mail size={14} />
-            <a href={`mailto:${client.email}`} className="text-blue-600 underline">
-              {client.email}
-            </a>
-          </li>
-        )}
-        {client.phone && (
-          <li className="flex items-center gap-2">
-            <Phone size={14} />
-            <a href={`tel:${client.phone}`} className="text-blue-600 underline">
-              {client.phone}
-            </a>
-          </li>
-        )}
-        <li className="flex items-start gap-2">
-          <MapPin size={14} className="mt-[2px]" />
-          <div className="leading-tight">
-            {client.address && <div>{client.address}</div>}
-            <div>{[client.city, client.state].filter(Boolean).join(", ")} {client.zip}</div>
+      </div>
+
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-4">Assign Client</h2>
+
+            <select
+              value={selectedUserId || ""}
+              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              className="w-full border rounded px-3 py-2 mb-4"
+            >
+              <option value="">Select a user</option>
+              {availableUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.email}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!selectedUserId}
+                onClick={async () => {
+                  const res = await apiFetch(`/clients/${id}/assign`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ assigned_to: selectedUserId }),
+                  });
+
+                  if (res.ok) {
+                    setShowAssignModal(false);
+                    window.location.reload();
+                  } else {
+                    alert("Failed to assign client.");
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Assign
+              </button>
+            </div>
           </div>
-        </li>
-      </ul>
-
-      <CompanyInteractions
-        token={token!}
-        entityType="client"
-        entityId={client.id}
-        initialInteractions={interactions}
-      />
-
-      <CompanyNotes
-        notes={client.notes || ""}
-        onSave={async (newNotes) => {
-          const res = await apiFetch(`/clients/${id}`, {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ notes: newNotes }),
-          });
-          if (res.ok) {
-            setClient((prev) => prev && { ...prev, notes: newNotes });
-          } else {
-            alert("Failed to save notes.");
-          }
-        }}
-      />
-    </div>
+        </div>
+      )}
+    </>
   );
 }

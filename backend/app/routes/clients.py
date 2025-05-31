@@ -213,8 +213,36 @@ async def list_all_clients():
                 "email": c.email,
                 "phone": c.phone,
                 "contact_person": c.contact_person,
-                "created_by": c.created_by,  # optional
+                "created_by": c.created_by,
+                "assigned_to_name": c.assigned_user.email if c.assigned_user else None,
+                "created_by_name": c.created_by_user.email if c.created_by_user else None,
             } for c in clients
         ])
     finally:
         session.close()
+
+@clients_bp.route("/assigned", methods=["GET"])
+@requires_auth()
+async def list_assigned_clients():
+    user = request.user
+    session = SessionLocal()
+    try:
+        clients = session.query(Client).filter(
+            Client.tenant_id == user.tenant_id,
+            Client.assigned_to == user.id,
+            Client.deleted_at == None
+        ).all()
+
+        return jsonify([
+            {
+                "id": c.id,
+                "name": c.name,
+                "email": c.email,
+                "phone": c.phone,
+                "contact_person": c.contact_person,
+                "assigned_to_name": c.assigned_user.email if c.assigned_user else None,
+            } for c in clients
+        ])
+    finally:
+        session.close()
+

@@ -33,10 +33,6 @@ export default function InteractionModal({
         <h2 className="text-lg font-bold mb-2">{title}</h2>
         <p className="text-sm text-gray-600 mb-1">Date: {date}</p>
 
-        <p className="text-sm mb-1">
-          <strong>Outcome:</strong> {outcome}
-        </p>
-
         {summary && (
           <p className="text-sm mb-1">
             <strong>Summary:</strong> {summary}
@@ -48,6 +44,10 @@ export default function InteractionModal({
             <strong>Notes:</strong> {notes}
           </p>
         )}
+        <br />
+        <p className="text-sm mb-1">
+          <strong>Next Step:</strong> {outcome}
+        </p>
 
         <div className="text-sm text-gray-700 space-y-1 mt-4">
           {contact_person && <p><strong>Contact:</strong> {contact_person}</p>}

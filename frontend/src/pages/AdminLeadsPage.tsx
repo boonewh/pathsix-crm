@@ -67,7 +67,9 @@ export default function AdminLeadsPage() {
                   </td>
                   <td className="px-4 py-2">{lead.contact_person}</td>
                   <td className="px-4 py-2">{lead.email}</td>
-                  <td className="px-4 py-2">{lead.assigned_to_name ?? "—"}</td>
+                  <td className="px-4 py-2">
+                    {lead.assigned_to_name || lead.created_by_name || "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -98,7 +100,9 @@ export default function AdminLeadsPage() {
                   </td>
                   <td className="px-4 py-2">{lead.contact_person}</td>
                   <td className="px-4 py-2">{lead.email}</td>
-                  <td className="px-4 py-2">{lead.assigned_to_name ?? "—"}</td>
+                  <td className="px-4 py-2">
+                    {lead.assigned_to_name || lead.created_by_name || "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -85,6 +85,18 @@
   }
 }
 
+/* === FULLCALENDAR FIX FOR timeGrid VIEW === */
+.fc-timegrid-event {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.fc-timegrid-event .fc-event-main {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
 /* === FullCalendar responsive mobile layout === */
 @media (max-width: 640px) {
   .fc-toolbar.fc-header-toolbar {
@@ -109,4 +121,3 @@
     max-width: 100%;
   }
 }
-

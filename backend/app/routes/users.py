@@ -134,3 +134,42 @@ async def update_user_roles(user_id):
         })
     finally:
         session.close()
+
+@users_bp.route("/<int:user_id>", methods=["PUT"])
+@requires_auth(roles=["admin"])
+async def update_user_email(user_id):
+    user = request.user
+    data = await request.get_json()
+    session = SessionLocal()
+    try:
+        target = session.query(User).filter(
+            User.id == user_id,
+            User.tenant_id == user.tenant_id
+        ).first()
+
+        if not target:
+            return jsonify({"error": "User not found"}), 404
+
+        new_email = data.get("email")
+        if not new_email:
+            return jsonify({"error": "Email is required"}), 400
+
+        if session.query(User).filter(
+            User.email == new_email,
+            User.id != user_id
+        ).first():
+            return jsonify({"error": "Another user already has that email"}), 400
+
+        target.email = new_email
+        session.commit()
+
+        return jsonify({
+            "id": target.id,
+            "email": target.email,
+            "roles": [r.name for r in target.roles],
+            "created_at": target.created_at.isoformat(),
+            "is_active": target.is_active
+        })
+
+    finally:
+        session.close()
