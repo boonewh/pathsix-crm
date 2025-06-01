@@ -164,8 +164,14 @@ useEffect(() => {
             details={
               <ul className="text-sm text-gray-600 space-y-1">
                 {lead.contact_person && (
-                  <li className="flex items-center gap-2">
-                    <User size={14} /> {lead.contact_person}
+                  <li className="flex items-start gap-2">
+                    <User size={14} className="mt-[2px]" />
+                    <div className="leading-tight">
+                      <div>{lead.contact_person}</div>
+                      {lead.contact_title && (
+                        <div className="text-gray-500 text-sm italic">{lead.contact_title}</div>
+                      )}
+                    </div>
                   </li>
                 )}
                 {lead.email && (

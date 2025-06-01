@@ -106,8 +106,10 @@ async def create_project():
         session.add(project)
         session.commit()
         session.refresh(project)
-        session.refresh(project.client)
-        session.refresh(project.lead)
+        if project.client:
+            session.refresh(project.client)
+        if project.lead:
+            session.refresh(project.lead)
         return jsonify({
             "id": project.id,
             "project_name": project.project_name,
@@ -151,8 +153,10 @@ async def update_project(project_id):
 
         session.commit()
         session.refresh(project)
-        session.refresh(project.client)
-        session.refresh(project.lead)
+        if project.client is not None:
+            session.refresh(project.client)
+        if project.lead is not None:
+            session.refresh(project.lead)
         return jsonify({
             "id": project.id,
             "project_name": project.project_name,

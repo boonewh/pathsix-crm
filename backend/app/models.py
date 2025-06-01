@@ -53,6 +53,7 @@ class Client(Base):
     assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
+    contact_title = Column(String(100))
     email = Column(String(120), index=True)
     phone = Column(String(20))
     address = Column(String(255))
@@ -101,6 +102,7 @@ class Lead(Base):
     deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
     name = Column(String(100), nullable=False)
     contact_person = Column(String(100))
+    contact_title = Column(String(100))
     email = Column(String(120), index=True)
     phone = Column(String(20))
     address = Column(String(255))
@@ -110,6 +112,8 @@ class Lead(Base):
     notes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
     assigned_to = Column(Integer, ForeignKey('users.id'), nullable=True)
+    lead_status = Column(String(20), default="open")  # Valid: "open", "converted", "closed", "lost"
+    converted_on = Column(DateTime, nullable=True)
 
     assigned_user = relationship("User", foreign_keys=[assigned_to])
     created_by_user = relationship("User", foreign_keys=[created_by])
@@ -127,7 +131,7 @@ class Project(Base):
     tenant_id = Column(Integer, nullable=False)
     project_name = Column(String(255), nullable=False)
     project_description = Column(Text, nullable=True)
-    project_status = Column(String(20), nullable=False)
+    project_status = Column(String(20), nullable=False) # Valid values: "pending", "won", "lost"
     project_start = Column(DateTime, nullable=True)
     project_end = Column(DateTime, nullable=True)
     project_worth = Column(Float, nullable=True)

@@ -20,6 +20,10 @@ export default function ClientForm({ form, setForm }: ClientFormProps) {
         <Input id="contact_person" value={form.contact_person} onChange={(e) => setForm({ ...form, contact_person: e.target.value })} />
       </div>
       <div className="grid gap-2">
+        <Label htmlFor="contact_title">Title</Label>
+        <Input id="contact_title" value={form.contact_title} onChange={(e) => setForm({ ...form, contact_title: e.target.value })} />
+      </div>
+      <div className="grid gap-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
       </div>

@@ -48,11 +48,19 @@ export default function ProjectForm({
 
       <div className="grid gap-2">
         <Label htmlFor="project_status">Status</Label>
-        <Input
+        <select
           id="project_status"
-          value={form.project_status || ""}
-          onChange={(e) => setForm({ ...form, project_status: e.target.value })}
-        />
+          value={form.project_status ?? "pending"}
+          onChange={(e) =>
+            setForm({ ...form, project_status: e.target.value })
+          }
+          className="border rounded px-2 py-1 text-sm"
+        >
+          {/* Default to “pending” if unset */}
+          <option value="pending">Pending</option>
+          <option value="won">Won</option>
+          <option value="lost">Lost</option>
+        </select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -147,4 +155,3 @@ export default function ProjectForm({
     </div>
   );
 }
-

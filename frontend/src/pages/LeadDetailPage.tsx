@@ -30,6 +30,10 @@ export default function LeadDetailPage() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState(lead?.contact_title || "");
+
+
   useEffect(() => {
     if (!id) return;
 
@@ -43,6 +47,7 @@ export default function LeadDetailPage() {
       })
       .then((data) => {
         setLead(data);
+        setNewTitle(data.contact_title || "");
         setNoteDraft(data.notes || "");
       })
       .catch((err) => {
@@ -180,8 +185,60 @@ export default function LeadDetailPage() {
 
       <ul className="text-sm text-gray-700 space-y-1">
         {lead.contact_person && (
-          <li className="flex items-center gap-2">
-            <User size={14} /> {lead.contact_person}
+          <li className="flex items-start gap-2">
+            <User size={14} className="mt-[2px]" />
+            <div className="leading-tight">
+              <div>{lead.contact_person}</div>
+              {editingTitle ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    className="border px-2 py-1 rounded text-sm"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                  />
+                  <button
+                    className="text-blue-600 text-sm"
+                    onClick={async () => {
+                      const res = await apiFetch(`/leads/${id}`, {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ contact_title: newTitle }),
+                      });
+                      if (res.ok) {
+                        setLead((prev) => prev && { ...prev, contact_title: newTitle });
+                        setEditingTitle(false);
+                      } else {
+                        alert("Failed to update title.");
+                      }
+                    }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="text-gray-500 text-sm"
+                    onClick={() => {
+                      setNewTitle(lead.contact_title || "");
+                      setEditingTitle(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                lead.contact_title && (
+                  <div
+                    className="text-gray-500 text-sm italic hover:underline cursor-pointer"
+                    onClick={() => setEditingTitle(true)}
+                  >
+                    {lead.contact_title}
+                  </div>
+                )
+              )}
+            </div>
           </li>
         )}
         {lead.email && (

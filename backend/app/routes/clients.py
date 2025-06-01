@@ -23,6 +23,7 @@ async def list_clients():
                 "id": c.id,
                 "name": c.name,
                 "contact_person": c.contact_person,
+                "contact_title": c.contact_title,
                 "email": c.email,
                 "phone": c.phone,
                 "address": c.address,
@@ -51,6 +52,7 @@ async def create_client():
             created_by=user.id,
             name=data["name"],
             contact_person=data.get("contact_person"),
+            contact_title=data.get("contact_title"),
             email=data.get("email"),
             phone=data.get("phone"),
             address=data.get("address"),
@@ -102,6 +104,7 @@ async def get_client(client_id):
             "phone": client.phone,
             "address": client.address,
             "contact_person": client.contact_person,
+            "contact_title": client.contact_title,
             "city": client.city,
             "state": client.state,
             "zip": client.zip,
@@ -129,7 +132,7 @@ async def update_client(client_id):
             return jsonify({"error": "Client not found"}), 404
 
         for field in [
-            "name", "contact_person", "email", "phone",
+            "name", "contact_person", "contact_title", "email", "phone",
             "address", "city", "state", "zip", "notes"
         ]:
             if field in data:
@@ -213,6 +216,7 @@ async def list_all_clients():
                 "email": c.email,
                 "phone": c.phone,
                 "contact_person": c.contact_person,
+                "contact_title": c.contact_title,
                 "created_by": c.created_by,
                 "assigned_to_name": c.assigned_user.email if c.assigned_user else None,
                 "created_by_name": c.created_by_user.email if c.created_by_user else None,
@@ -240,6 +244,7 @@ async def list_assigned_clients():
                 "email": c.email,
                 "phone": c.phone,
                 "contact_person": c.contact_person,
+                "contact_title": c.contact_title,
                 "assigned_to_name": c.assigned_user.email if c.assigned_user else None,
             } for c in clients
         ])

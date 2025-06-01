@@ -201,3 +201,17 @@ Would you like to start implementing this piece-by-piece, maybe with the follow-
   Normalize error messages in case the backend returns HTML or unexpected formats.
 
   Replace <a href="/login"> with <Link to="/login"> from react-router-dom for SPA routing.
+
+
+Reports page to-dos: 
+If/when you're ready to:
+
+Add user-based breakdowns
+
+Compare periods (e.g. this month vs last)
+
+Export as CSV or PDF
+
+We can build that straight onto this solid foundation.
+
+Let me know what’s next!

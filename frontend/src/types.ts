@@ -14,6 +14,7 @@ export interface Client {
   id: number;
   name: string;
   contact_person?: string;
+  contact_title?: string;
   email: string;
   phone: string;
   address: string;
@@ -54,6 +55,7 @@ export interface Lead {
   id: number;
   name: string;
   contact_person?: string;
+  contact_title?: string;
   email: string;
   phone: string;
   address: string;

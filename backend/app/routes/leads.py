@@ -31,6 +31,7 @@ async def list_leads():
                 "id": l.id,
                 "name": l.name,
                 "contact_person": l.contact_person,
+                "contact_title": l.contact_title,
                 "email": l.email,
                 "phone": l.phone,
                 "address": l.address,
@@ -44,7 +45,9 @@ async def list_leads():
                     l.assigned_user.email if l.assigned_user
                     else l.created_by_user.email if l.created_by_user
                     else None
-                )
+                ),
+                "lead_status": l.lead_status,
+                "converted_on": l.converted_on.isoformat() if l.converted_on else None
             } for l in leads
         ])
         response.headers["Cache-Control"] = "no-store"
@@ -65,6 +68,7 @@ async def create_lead():
             created_by=user.id,
             name=data["name"],
             contact_person=data.get("contact_person"),
+            contact_title=data.get("contact_title"),
             email=data.get("email"),
             phone=data.get("phone"),
             address=data.get("address"),
@@ -113,6 +117,7 @@ async def get_lead(lead_id):
             "id": lead.id,
             "name": lead.name,
             "contact_person": lead.contact_person,
+            "contact_title": lead.contact_title,
             "email": lead.email,
             "phone": lead.phone,
             "address": lead.address,
@@ -120,12 +125,15 @@ async def get_lead(lead_id):
             "state": lead.state,
             "zip": lead.zip,
             "notes": lead.notes,
-            "created_at": lead.created_at.isoformat()
+            "created_at": lead.created_at.isoformat(),
+            "lead_status": lead.lead_status,
+            "converted_on": lead.converted_on.isoformat() if lead.converted_on else None
         })
         response.headers["Cache-Control"] = "no-store"
         return response
     finally:
         session.close()
+
 
 
 @leads_bp.route("/<int:lead_id>", methods=["PUT"])
@@ -146,11 +154,19 @@ async def update_lead(lead_id):
             return jsonify({"error": "Lead not found"}), 404
 
         for field in [
-            "name", "contact_person", "email", "phone",
+            "name", "contact_person", "contact_title", "email", "phone",
             "address", "city", "state", "zip", "notes"
         ]:
             if field in data:
                 setattr(lead, field, data[field] or None)
+
+        # Handle lead_status and converted_on
+        if "lead_status" in data:
+            new_status = data["lead_status"]
+            if new_status in ["open", "converted", "closed", "lost"]:
+                if new_status == "converted" and lead.lead_status != "converted":
+                    lead.converted_on = datetime.utcnow()
+                lead.lead_status = new_status
 
         lead.updated_by = user.id
         lead.updated_at = datetime.utcnow()
@@ -229,6 +245,7 @@ async def list_all_leads_admin():
             "id": l.id,
             "name": l.name,
             "contact_person": l.contact_person,
+            "contact_title": l.contact_title,
             "email": l.email,
             "phone": l.phone,
             "address": l.address,
@@ -238,6 +255,8 @@ async def list_all_leads_admin():
             "notes": l.notes,
             "assigned_to": l.assigned_to,
             "created_at": l.created_at.isoformat(),
+            "lead_status": l.lead_status,
+            "converted_on": l.converted_on.isoformat() if l.converted_on else None,
             "created_by_name": l.created_by_user.email if l.created_by_user else None,
         } for l in leads])
         response.headers["Cache-Control"] = "no-store"
@@ -262,6 +281,7 @@ async def list_assigned_leads():
             "id": l.id,
             "name": l.name,
             "contact_person": l.contact_person,
+            "contact_title": l.contact_title,
             "email": l.email,
             "phone": l.phone,
             "address": l.address,
@@ -270,7 +290,9 @@ async def list_assigned_leads():
             "zip": l.zip,
             "notes": l.notes,
             "assigned_to": l.assigned_to,
-            "created_at": l.created_at.isoformat()
+            "created_at": l.created_at.isoformat(),
+            "lead_status": l.lead_status,
+            "converted_on": l.converted_on.isoformat() if l.converted_on else None
         } for l in leads])
         response.headers["Cache-Control"] = "no-store"
         return response

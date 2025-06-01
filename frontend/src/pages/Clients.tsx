@@ -152,8 +152,14 @@ export default function Customers() {
             details={
               <ul className="text-sm text-gray-600 space-y-1">
                 {client.contact_person && (
-                  <li className="flex items-center gap-2">
-                    <User size={14} /> {client.contact_person}
+                  <li className="flex items-start gap-2">
+                    <User size={14} className="mt-[2px]" />
+                    <div className="leading-tight">
+                      <div>{client.contact_person}</div>
+                      {client.contact_title && (
+                        <div className="text-gray-500 text-sm italic">{client.contact_title}</div>
+                      )}
+                    </div>
                   </li>
                 )}
                 {client.email && (
