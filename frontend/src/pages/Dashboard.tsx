@@ -40,7 +40,7 @@ export default function Dashboard() {
   const now = new Date();
 
   const parsedFollowUps = interactions
-    .filter((i) => i.follow_up)
+    .filter((i) => i.follow_up && i.followup_status !== "completed")
     .map((i) => ({
       ...i,
       parsedFollowUp: parseISO(i.follow_up!),
@@ -60,7 +60,7 @@ export default function Dashboard() {
     .filter(
       (i) =>
         isWithinInterval(i.parsedFollowUp, {
-          start: addDays(now, 1),
+          start: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
           end: addDays(now, 7),
         })
     )
@@ -164,6 +164,18 @@ export default function Dashboard() {
           phone={selectedInteraction.phone}
           profile_link={selectedInteraction.profile_link}
           onClose={() => setSelectedInteraction(null)}
+          onMarkComplete={async () => {
+            const res = await apiFetch(`/interactions/${selectedInteraction.id}/complete`, {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              setInteractions(prev => prev.filter(i => i.id !== selectedInteraction.id));
+              setSelectedInteraction(null);
+            } else {
+              alert("Failed to mark interaction as completed.");
+            }
+          }}
         />
       )}
     </div>

@@ -41,6 +41,7 @@ export type Interaction = {
   email?: string;
   phone?: string;
   profile_link?: string;
+  followup_status?: "pending" | "completed";
 };
 
 export type InteractionFormData = {

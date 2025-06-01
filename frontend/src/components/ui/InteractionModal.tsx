@@ -11,6 +11,7 @@ interface InteractionModalProps {
   onClose: () => void;
   calendarLink?: string;
   icsLink?: string;
+  onMarkComplete?: () => void;
 }
 
 export default function InteractionModal({
@@ -26,6 +27,7 @@ export default function InteractionModal({
   onClose,
   calendarLink,
   icsLink,
+  onMarkComplete,
 }: InteractionModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -80,6 +82,14 @@ export default function InteractionModal({
             >
               Apple / Outlook
             </a>
+          )}
+          {onMarkComplete && (
+            <button
+              onClick={onMarkComplete}
+              className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+            >
+              Mark Complete
+            </button>
           )}
           <button
             onClick={onClose}

@@ -25,8 +25,6 @@ def create_token(user: User) -> str:
     return jwt.encode(header, payload, current_app.config["SECRET_KEY"]).decode("utf-8")
 
 def decode_token(token: str):
-    print("🔍 Decoding token in decode_token():", token)
-    print("🔍 SECRET_KEY:", current_app.config["SECRET_KEY"])
     return jwt.decode(token, current_app.config["SECRET_KEY"])
 
 def requires_auth(roles: list = None):
@@ -34,16 +32,12 @@ def requires_auth(roles: list = None):
         @wraps(fn)
         async def decorated(*args, **kwargs):
             auth_header = request.headers.get("Authorization", None)
-            print("🔍 Incoming Authorization header:", auth_header)
             if not auth_header or not auth_header.startswith("Bearer "):
                 return jsonify({"error": "Missing or invalid token"}), 401
             token = auth_header.split(" ")[1]
             try:
                 payload = decode_token(token)
-                print("🔐 [auth] Token:", token)
-                print("🔐 [auth] Payload:", payload)
             except JoseError as e:
-                print("🚫 JWT decode failed:", e)
                 return jsonify({"error": "Invalid token"}), 401
 
             session = SessionLocal()

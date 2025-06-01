@@ -108,6 +108,19 @@ export default function CompanyInteractions({
     }
   };
 
+  const markAsComplete = async (id: number) => {
+    const res = await apiFetch(`/interactions/${id}/complete`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      await fetchUpdatedInteractions();
+    } else {
+      alert("Failed to mark interaction as completed.");
+    }
+  };
+
   useEffect(() => {
     setInteractions(initialInteractions);
   }, [initialInteractions]);
@@ -172,7 +185,11 @@ export default function CompanyInteractions({
                 </strong>
               </p>
 
-              <p className="text-sm">{i.summary}</p>
+              {i.followup_status === "completed" && (
+                <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  Completed
+                </span>
+              )}
 
               {i.notes && <p className="text-xs text-gray-500 mt-1">{i.notes}</p>}
 
@@ -219,6 +236,18 @@ export default function CompanyInteractions({
                     >
                       Edit
                     </button>
+                    {(i.followup_status !== "completed") && (
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsComplete(i.id);
+                          setOpenMenuId(null);
+                        }}
+                      >
+                        Mark Complete
+                      </button>
+                    )}
                     <button
                       className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                       onClick={(e) => {

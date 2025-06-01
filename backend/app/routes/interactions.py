@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_
 from icalendar import Calendar, Event
 
-from app.models import Interaction, Client, Lead
+from app.models import Interaction, Client, Lead, FollowUpStatus
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 
@@ -68,6 +68,7 @@ async def list_interactions():
                 "contact_person": i.client.contact_person if i.client else i.lead.contact_person if i.lead else None,
                 "email": i.client.email if i.client else i.lead.email if i.lead else None,
                 "phone": i.client.phone if i.client else i.lead.phone if i.lead else None,
+                "followup_status": i.followup_status.value if i.followup_status else None,
                 "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
             } for i in interactions
         ])
@@ -231,5 +232,26 @@ async def get_interaction_ics(interaction_id):
                 "Content-Disposition": f"attachment; filename=interaction-{interaction.id}.ics"
             }
         )
+    finally:
+        session.close()
+
+
+@interactions_bp.route("/<int:interaction_id>/complete", methods=["PUT"])
+@requires_auth()
+async def complete_interaction(interaction_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        interaction = session.query(Interaction).filter(
+            Interaction.id == interaction_id,
+            Interaction.tenant_id == user.tenant_id
+        ).first()
+
+        if not interaction:
+            return jsonify({"error": "Interaction not found"}), 404
+
+        interaction.followup_status = FollowUpStatus.completed
+        session.commit()
+        return jsonify({"message": "Interaction marked as completed"})
     finally:
         session.close()
