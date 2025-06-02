@@ -119,8 +119,17 @@ export default function AdminUsersPage() {
 
     if (res.ok) {
       const updated = await res.json();
+      console.log("Updated user response:", updated);
+
       setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, email: updated.email } : u))
+        prev.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                email: updated.email || editedEmail, // fallback if backend response is empty
+              }
+            : u
+        )
       );
       setEditingUserId(null);
       setEditedEmail("");
@@ -129,6 +138,7 @@ export default function AdminUsersPage() {
       alert(error || "Failed to update email");
     }
   };
+
 
   const activeUsers = users.filter((u) => u.is_active);
   const inactiveUsers = users.filter((u) => !u.is_active);
