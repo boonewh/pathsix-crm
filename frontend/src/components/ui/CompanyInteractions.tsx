@@ -285,7 +285,7 @@ export default function CompanyInteractions({
                 ? generateGoogleCalendarUrl(selectedInteraction)
                 : undefined
             }
-            icsLink={`${import.meta.env.VITE_BACKEND_URL}/api/interactions/${selectedInteraction.id}/calendar.ics`}
+            icsLink={`${import.meta.env.VITE_API_BASE_URL}/interactions/${selectedInteraction.id}/calendar.ics`}
           />
         )}
       </div>

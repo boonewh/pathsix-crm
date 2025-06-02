@@ -219,7 +219,7 @@ export default function CalendarPage() {
           profile_link={selectedEvent.extendedProps.profile_link}
           onClose={() => setSelectedEvent(null)}
           calendarLink={generateGoogleCalendarUrl(selectedEvent)}
-          icsLink={`${import.meta.env.VITE_BACKEND_URL}/api/interactions/${selectedEvent.id}/calendar.ics`}
+          icsLink={`${import.meta.env.VITE_API_BASE_URL}/interactions/${selectedEvent.id}/calendar.ics`}
         />
       )}
     </div>
