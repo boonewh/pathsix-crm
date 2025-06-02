@@ -1,8 +1,8 @@
-"""add X or change Y
+"""Sync to production schema
 
-Revision ID: c1291d1ea3b9
-Revises: 496b24a8580d
-Create Date: 2025-05-28 22:20:16.747887
+Revision ID: 879bb020bae6
+Revises: 
+Create Date: 2025-06-02 00:27:53.816933
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c1291d1ea3b9'
-down_revision: Union[str, None] = '496b24a8580d'
+revision: str = '879bb020bae6'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -57,12 +57,17 @@ def upgrade() -> None:
     sa.Column('tenant_id', sa.Integer(), nullable=False),
     sa.Column('created_by', sa.Integer(), nullable=False),
     sa.Column('updated_by', sa.Integer(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('deleted_by', sa.Integer(), nullable=True),
     sa.Column('assigned_to', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('contact_person', sa.String(length=100), nullable=True),
+    sa.Column('contact_title', sa.String(length=100), nullable=True),
     sa.Column('email', sa.String(length=120), nullable=True),
     sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('phone_label', sa.String(length=20), nullable=True),
+    sa.Column('secondary_phone', sa.String(length=20), nullable=True),
+    sa.Column('secondary_phone_label', sa.String(length=20), nullable=True),
     sa.Column('address', sa.String(length=255), nullable=True),
     sa.Column('city', sa.String(length=100), nullable=True),
     sa.Column('state', sa.String(length=100), nullable=True),
@@ -70,7 +75,6 @@ def upgrade() -> None:
     sa.Column('status', sa.String(length=50), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['assigned_to'], ['users.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
@@ -88,17 +92,23 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.Column('deleted_by', sa.Integer(), nullable=True),
+    sa.Column('assigned_to', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('contact_person', sa.String(length=100), nullable=True),
+    sa.Column('contact_title', sa.String(length=100), nullable=True),
     sa.Column('email', sa.String(length=120), nullable=True),
     sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('phone_label', sa.String(length=20), nullable=True),
+    sa.Column('secondary_phone', sa.String(length=20), nullable=True),
+    sa.Column('secondary_phone_label', sa.String(length=20), nullable=True),
     sa.Column('address', sa.String(length=255), nullable=True),
     sa.Column('city', sa.String(length=100), nullable=True),
     sa.Column('state', sa.String(length=100), nullable=True),
     sa.Column('zip', sa.String(length=20), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('assigned_to', sa.Integer(), nullable=True),
+    sa.Column('lead_status', sa.String(length=20), nullable=True),
+    sa.Column('converted_on', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['assigned_to'], ['users.id'], ),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.ForeignKeyConstraint(['deleted_by'], ['users.id'], ),

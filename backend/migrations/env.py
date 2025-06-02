@@ -5,8 +5,34 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 # ✅ Inject the env var directly here
+#from dotenv import load_dotenv
+#load_dotenv()
+
 config = context.config
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+
+raw_url = os.environ.get("DATABASE_URL", "")
+print("🚨 RAW DATABASE_URL:", raw_url)
+
+if raw_url.startswith("postgres://"):
+    raw_url = raw_url.replace("postgres://", "postgresql://", 1)
+    print("✅ Rewritten to:", raw_url)
+
+# Load DATABASE_URL from environment
+raw_url = os.environ.get("DATABASE_URL", "")
+
+# DEBUG PRINTS
+print("🚨 RAW DATABASE_URL:", raw_url)
+
+# Fix deprecated postgres:// prefix
+if raw_url.startswith("postgres://"):
+    raw_url = raw_url.replace("postgres://", "postgresql://", 1)
+    print("✅ Rewritten to:", raw_url)
+
+# Apply to Alembic
+config.set_main_option("sqlalchemy.url", raw_url)
+
+
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
