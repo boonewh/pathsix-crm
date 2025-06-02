@@ -279,12 +279,18 @@ async def list_all_leads_admin():
             "created_at": l.created_at.isoformat() + "Z",
             "lead_status": l.lead_status,
             "converted_on": l.converted_on.isoformat() + "Z" if l.converted_on else None,
+            "assigned_to_name": (
+                l.assigned_user.email if l.assigned_user
+                else l.created_by_user.email if l.created_by_user
+                else None
+            ),
             "created_by_name": l.created_by_user.email if l.created_by_user else None,
         } for l in leads])
         response.headers["Cache-Control"] = "no-store"
         return response
     finally:
         session.close()
+
 
 
 @leads_bp.route("/assigned", methods=["GET"])

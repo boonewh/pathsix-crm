@@ -258,3 +258,36 @@ async def complete_interaction(interaction_id):
         return jsonify({"message": "Interaction marked as completed"})
     finally:
         session.close()
+
+@interactions_bp.route("/all", methods=["GET"])
+@requires_auth(roles=["admin"])
+async def list_all_interactions_admin():
+    user = request.user
+    session = SessionLocal()
+    try:
+        interactions = session.query(Interaction).options(
+            joinedload(Interaction.client),
+            joinedload(Interaction.lead)
+        ).filter(
+            Interaction.tenant_id == user.tenant_id
+        ).order_by(Interaction.contact_date.desc()).all()
+
+        return jsonify([{
+            "id": i.id,
+            "contact_date": i.contact_date.isoformat(),
+            "follow_up": i.follow_up.isoformat() if i.follow_up else None,
+            "summary": i.summary,
+            "outcome": i.outcome,
+            "notes": i.notes,
+            "client_id": i.client_id,
+            "lead_id": i.lead_id,
+            "client_name": i.client.name if i.client else None,
+            "lead_name": i.lead.name if i.lead else None,
+            "contact_person": i.contact_person,
+            "email": i.email,
+            "phone": i.phone,
+            "followup_status": i.followup_status.value if i.followup_status else None,
+            "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
+        } for i in interactions])
+    finally:
+        session.close()

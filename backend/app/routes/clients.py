@@ -219,6 +219,7 @@ async def assign_client(client_id):
     finally:
         session.close()
 
+
 @clients_bp.route("/all", methods=["GET"])
 @requires_auth(roles=["admin"])
 async def list_all_clients():
@@ -242,12 +243,17 @@ async def list_all_clients():
                 "contact_person": c.contact_person,
                 "contact_title": c.contact_title,
                 "created_by": c.created_by,
-                "assigned_to_name": c.assigned_user.email if c.assigned_user else None,
                 "created_by_name": c.created_by_user.email if c.created_by_user else None,
+                "assigned_to_name": (
+                    c.assigned_user.email if c.assigned_user
+                    else c.created_by_user.email if c.created_by_user
+                    else None
+                )
             } for c in clients
         ])
     finally:
         session.close()
+
 
 @clients_bp.route("/assigned", methods=["GET"])
 @requires_auth()
