@@ -26,6 +26,9 @@ async def list_clients():
                 "contact_title": c.contact_title,
                 "email": c.email,
                 "phone": c.phone,
+                "phone_label": c.phone_label,
+                "secondary_phone": c.secondary_phone,
+                "secondary_phone_label": c.secondary_phone_label,
                 "address": c.address,
                 "city": c.city,
                 "state": c.state,
@@ -55,6 +58,9 @@ async def create_client():
             contact_title=data.get("contact_title"),
             email=data.get("email"),
             phone=data.get("phone"),
+            phone_label=data.get("phone_label", "work"),
+            secondary_phone=data.get("secondary_phone"),
+            secondary_phone_label=data.get("secondary_phone_label"),
             address=data.get("address"),
             city=data.get("city"),
             state=data.get("state"),
@@ -102,6 +108,9 @@ async def get_client(client_id):
             "name": client.name,
             "email": client.email,
             "phone": client.phone,
+            "phone_label": client.phone_label,
+            "secondary_phone": client.secondary_phone,
+            "secondary_phone_label": client.secondary_phone_label,
             "address": client.address,
             "contact_person": client.contact_person,
             "contact_title": client.contact_title,
@@ -132,7 +141,8 @@ async def update_client(client_id):
             return jsonify({"error": "Client not found"}), 404
 
         for field in [
-            "name", "contact_person", "contact_title", "email", "phone",
+            "name", "contact_person", "contact_title", "email", "phone", "phone_label",
+            "secondary_phone", "secondary_phone_label",
             "address", "city", "state", "zip", "notes"
         ]:
             if field in data:
@@ -215,6 +225,9 @@ async def list_all_clients():
                 "name": c.name,
                 "email": c.email,
                 "phone": c.phone,
+                "phone_label": c.phone_label,
+                "secondary_phone": c.secondary_phone,
+                "secondary_phone_label": c.secondary_phone_label,
                 "contact_person": c.contact_person,
                 "contact_title": c.contact_title,
                 "created_by": c.created_by,
@@ -243,6 +256,9 @@ async def list_assigned_clients():
                 "name": c.name,
                 "email": c.email,
                 "phone": c.phone,
+                "phone_label": c.phone_label,
+                "secondary_phone": c.secondary_phone,
+                "secondary_phone_label": c.secondary_phone_label,
                 "contact_person": c.contact_person,
                 "contact_title": c.contact_title,
                 "assigned_to_name": c.assigned_user.email if c.assigned_user else None,

@@ -68,6 +68,9 @@ async def list_interactions():
                 "contact_person": i.client.contact_person if i.client else i.lead.contact_person if i.lead else None,
                 "email": i.client.email if i.client else i.lead.email if i.lead else None,
                 "phone": i.client.phone if i.client else i.lead.phone if i.lead else None,
+                "phone_label": i.client.phone_label if i.client else i.lead.phone_label if i.lead else None,
+                "secondary_phone": i.client.secondary_phone if i.client else i.lead.secondary_phone if i.lead else None,
+                "secondary_phone_label": i.client.secondary_phone_label if i.client else i.lead.secondary_phone_label if i.lead else None,
                 "followup_status": i.followup_status.value if i.followup_status else None,
                 "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
             } for i in interactions

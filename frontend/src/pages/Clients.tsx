@@ -19,12 +19,16 @@ export default function Customers() {
     contact_person: "",
     email: "",
     phone: "",
+    phone_label: "work", 
+    secondary_phone: "",
+    secondary_phone_label: "mobile",
     address: "",
     city: "",
     state: "",
     zip: "",
     notes: "",
   });
+
   const [error, setError] = useState("");
   const { token } = useAuth();
 
@@ -84,6 +88,9 @@ export default function Customers() {
       contact_person: "",
       email: "",
       phone: "",
+      phone_label: "work",
+      secondary_phone: "",
+      secondary_phone_label: "mobile",
       address: "",
       city: "",
       state: "",
@@ -109,6 +116,9 @@ export default function Customers() {
             contact_person: "",
             email: "",
             phone: "",
+            phone_label: "work",                    // ✅ add this
+            secondary_phone: "",
+            secondary_phone_label: "mobile",        // ✅ and this
             address: "",
             city: "",
             state: "",
@@ -143,7 +153,10 @@ export default function Customers() {
             editing={editingId === client.id}
             onEdit={() => {
               setEditingId(client.id);
-              setForm(client);
+              setForm({
+                ...client,
+                secondary_phone_label: client.secondary_phone_label || "mobile",
+              });
             }}
             onSave={handleSave}
             onCancel={handleCancel}
@@ -162,14 +175,27 @@ export default function Customers() {
                     </div>
                   </li>
                 )}
-                {client.email && (
-                  <li className="flex items-center gap-2">
-                    <Mail size={14} /> {client.email}
-                  </li>
-                )}
                 {client.phone && (
                   <li className="flex items-center gap-2">
-                    <Phone size={14} /> {client.phone}
+                    <Phone size={14} />
+                    <span>
+                      {client.phone}
+                      {client.phone_label && (
+                        <span className="text-muted-foreground text-sm"> ({client.phone_label})</span>
+                      )}
+                    </span>
+                  </li>
+                )}
+
+                {client.secondary_phone && (
+                  <li className="flex items-center gap-2 ml-[22px]">
+                    {/* indentation to align under phone icon */}
+                    <span>
+                      {client.secondary_phone}
+                      {client.secondary_phone_label && (
+                        <span className="text-muted-foreground text-sm"> ({client.secondary_phone_label})</span>
+                      )}
+                    </span>
                   </li>
                 )}
                 {(client.address || client.city || client.state || client.zip) && (

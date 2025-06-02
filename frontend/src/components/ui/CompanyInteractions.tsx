@@ -267,11 +267,7 @@ export default function CompanyInteractions({
 
         {selectedInteraction && (
           <InteractionModal
-            title={`${
-              entityType === "client"
-                ? USE_ACCOUNT_LABELS ? "Account" : "Client"
-                : "Lead"
-            } Interaction`}
+            title={`${entityType === "client" ? (USE_ACCOUNT_LABELS ? "Account" : "Client") : "Lead"} Interaction`}
             date={new Date(selectedInteraction.contact_date).toLocaleString()}
             outcome={selectedInteraction.outcome}
             summary={selectedInteraction.summary}
@@ -279,6 +275,9 @@ export default function CompanyInteractions({
             contact_person={selectedInteraction.contact_person}
             email={selectedInteraction.email}
             phone={selectedInteraction.phone}
+            phone_label={selectedInteraction.phone_label}
+            secondary_phone={selectedInteraction.secondary_phone}
+            secondary_phone_label={selectedInteraction.secondary_phone_label}
             profile_link={selectedInteraction.profile_link}
             onClose={() => setSelectedInteraction(null)}
             calendarLink={

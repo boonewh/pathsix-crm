@@ -17,14 +17,18 @@ export interface Client {
   contact_title?: string;
   email: string;
   phone: string;
+  phone_label: "work" | "mobile";
+  secondary_phone?: string;
+  secondary_phone_label?: "work" | "mobile";
   address: string;
   city: string;
   state: string;
   zip: string;
   notes?: string;
   created_at: string;
-  accounts?: Account[];  
+  accounts?: Account[];
 }
+
 
 export type Interaction = {
   id: number;
@@ -40,6 +44,9 @@ export type Interaction = {
   contact_person?: string;
   email?: string;
   phone?: string;
+  phone_label?: "work" | "mobile";
+  secondary_phone?: string;
+  secondary_phone_label?: "work" | "mobile";
   profile_link?: string;
   followup_status?: "pending" | "completed";
 };
@@ -59,17 +66,21 @@ export interface Lead {
   contact_title?: string;
   email: string;
   phone: string;
+  phone_label: "work" | "mobile";
+  secondary_phone?: string;
+  secondary_phone_label?: "work" | "mobile";
   address: string;
   city: string;
   state: string;
   zip: string;
-  status: string;
   notes?: string;
   created_at: string;
   assigned_to?: number;
   assigned_to_name?: string;
-  created_by_name?: string;
+  lead_status: "open" | "converted" | "closed" | "lost";
+  converted_on?: string;
 }
+
 
 export interface Project {
   id: number;

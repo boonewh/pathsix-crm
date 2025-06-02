@@ -164,13 +164,38 @@ export default function ClientDetailPage() {
             </li>
           )}
           {client.phone && (
-            <li className="flex items-center gap-2">
-              <Phone size={14} />
-              <a href={`tel:${client.phone}`} className="text-blue-600 underline">
-                {client.phone}
-              </a>
+            <li className="flex items-start gap-2">
+              <Phone size={14} className="mt-[2px]" />
+              <div className="leading-tight">
+                <div>
+                  <a href={`tel:${client.phone}`} className="text-blue-600 underline">
+                    {client.phone}
+                  </a>
+                  {client.phone_label && (
+                    <span className="text-muted-foreground text-sm ml-1">
+                      ({client.phone_label})
+                    </span>
+                  )}
+                </div>
+                {client.secondary_phone && (
+                  <div>
+                    <a
+                      href={`tel:${client.secondary_phone}`}
+                      className="text-blue-600 underline"
+                    >
+                      {client.secondary_phone}
+                    </a>
+                    {client.secondary_phone_label && (
+                      <span className="text-muted-foreground text-sm ml-1">
+                        ({client.secondary_phone_label})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </li>
           )}
+
           <li className="flex items-start gap-2">
             <MapPin size={14} className="mt-[2px]" />
             <div className="leading-tight">

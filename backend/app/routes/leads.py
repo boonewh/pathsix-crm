@@ -34,6 +34,9 @@ async def list_leads():
                 "contact_title": l.contact_title,
                 "email": l.email,
                 "phone": l.phone,
+                "phone_label": l.phone_label,
+                "secondary_phone": l.secondary_phone,
+                "secondary_phone_label": l.secondary_phone_label,
                 "address": l.address,
                 "city": l.city,
                 "state": l.state,
@@ -71,6 +74,9 @@ async def create_lead():
             contact_title=data.get("contact_title"),
             email=data.get("email"),
             phone=data.get("phone"),
+            phone_label=data.get("phone_label", "work"),
+            secondary_phone=data.get("secondary_phone"),
+            secondary_phone_label=data.get("secondary_phone_label"),
             address=data.get("address"),
             city=data.get("city"),
             state=data.get("state"),
@@ -120,6 +126,9 @@ async def get_lead(lead_id):
             "contact_title": lead.contact_title,
             "email": lead.email,
             "phone": lead.phone,
+            "phone_label": lead.phone_label,
+            "secondary_phone": lead.secondary_phone,
+            "secondary_phone_label": lead.secondary_phone_label,
             "address": lead.address,
             "city": lead.city,
             "state": lead.state,
@@ -154,7 +163,8 @@ async def update_lead(lead_id):
             return jsonify({"error": "Lead not found"}), 404
 
         for field in [
-            "name", "contact_person", "contact_title", "email", "phone",
+            "name", "contact_person", "contact_title", "email", "phone", "phone_label",
+            "secondary_phone", "secondary_phone_label",
             "address", "city", "state", "zip", "notes"
         ]:
             if field in data:
@@ -248,6 +258,9 @@ async def list_all_leads_admin():
             "contact_title": l.contact_title,
             "email": l.email,
             "phone": l.phone,
+            "phone_label": l.phone_label,
+            "secondary_phone": l.secondary_phone,
+            "secondary_phone_label": l.secondary_phone_label,
             "address": l.address,
             "city": l.city,
             "state": l.state,
@@ -284,6 +297,9 @@ async def list_assigned_leads():
             "contact_title": l.contact_title,
             "email": l.email,
             "phone": l.phone,
+            "phone_label": l.phone_label,
+            "secondary_phone": l.secondary_phone,
+            "secondary_phone_label": l.secondary_phone_label,
             "address": l.address,
             "city": l.city,
             "state": l.state,

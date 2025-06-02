@@ -17,11 +17,14 @@ export default function Leads() {
     contact_person: "",
     email: "",
     phone: "",
+    phone_label: "work",                    
+    secondary_phone: "",
+    secondary_phone_label: "mobile",       
     address: "",
     city: "",
     state: "",
     zip: "",
-    status: "",
+    lead_status: "open",
     notes: "",
   });
   const { token, user } = useAuth();
@@ -46,7 +49,6 @@ useEffect(() => {
 
   fetchLeads();
 
-  // ✅ Add this after fetchLeads()
   if (userHasRole(user, "admin")) {
     fetch("/api/users/", {
       headers: { Authorization: `Bearer ${token}` },
@@ -58,7 +60,11 @@ useEffect(() => {
 
   const handleEdit = (lead: Lead) => {
     setCurrentlyEditingId(lead.id);
-    setForm({ ...lead });
+    setForm({
+  ...lead,
+      phone_label: lead.phone_label || "work",
+      secondary_phone_label: lead.secondary_phone_label || "mobile",
+    });
   };
 
   const handleCancel = () => {
@@ -69,17 +75,20 @@ useEffect(() => {
       contact_person: "",
       email: "",
       phone: "",
+      phone_label: "work",                    
+      secondary_phone: "",
+      secondary_phone_label: "mobile",        
       address: "",
       city: "",
       state: "",
       zip: "",
-      status: "",
+      lead_status: "open",
       notes: "",
     });
   };
 
   const handleSave = async () => {
-    const method = creating ? "POST" : "PATCH";
+    const method = creating ? "POST" : "PUT";
     const url = creating ? "/leads/" : `/leads/${currentlyEditingId}`;
 
     const res = await apiFetch(url, {
@@ -123,11 +132,14 @@ useEffect(() => {
             contact_person: "",
             email: "",
             phone: "",
+            phone_label: "work",
+            secondary_phone: "",
+            secondary_phone_label: "mobile",
             address: "",
             city: "",
             state: "",
             zip: "",
-            status: "",
+            lead_status: "open",
             notes: "",
           });
         }}
@@ -180,8 +192,35 @@ useEffect(() => {
                   </li>
                 )}
                 {lead.phone && (
-                  <li className="flex items-center gap-2">
-                    <Phone size={14} /> {lead.phone}
+                  <li className="flex items-start gap-2">
+                    <Phone size={14} className="mt-[2px]" />
+                    <div className="leading-tight">
+                      <div>
+                        <a href={`tel:${lead.phone}`} className="text-blue-600 underline">
+                          {lead.phone}
+                        </a>
+                        {lead.phone_label && (
+                          <span className="text-muted-foreground text-sm ml-1">
+                            ({lead.phone_label})
+                          </span>
+                        )}
+                      </div>
+                      {lead.secondary_phone && (
+                        <div>
+                          <a
+                            href={`tel:${lead.secondary_phone}`}
+                            className="text-blue-600 underline"
+                          >
+                            {lead.secondary_phone}
+                          </a>
+                          {lead.secondary_phone_label && (
+                            <span className="text-muted-foreground text-sm ml-1">
+                              ({lead.secondary_phone_label})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </li>
                 )}
                 {(lead.address || lead.city || lead.state || lead.zip) && (
@@ -196,9 +235,9 @@ useEffect(() => {
                     </div>
                   </li>
                 )}
-                {lead.status && (
+                {lead.lead_status && (
                   <li className="flex items-center gap-2">
-                    <Flag size={14} /> {lead.status}
+                    <Flag size={14} /> {lead.lead_status}
                   </li>
                 )}
                 {lead.notes && (

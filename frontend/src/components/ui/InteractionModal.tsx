@@ -7,6 +7,9 @@ interface InteractionModalProps {
   contact_person?: string;
   email?: string;
   phone?: string;
+  phone_label?: string;
+  secondary_phone?: string;
+   secondary_phone_label?: "work" | "mobile";
   profile_link?: string;
   onClose: () => void;
   calendarLink?: string;
@@ -23,6 +26,9 @@ export default function InteractionModal({
   contact_person,
   email,
   phone,
+  phone_label,
+  secondary_phone,
+  secondary_phone_label,
   profile_link,
   onClose,
   calendarLink,
@@ -54,7 +60,30 @@ export default function InteractionModal({
         <div className="text-sm text-gray-700 space-y-1 mt-4">
           {contact_person && <p><strong>Contact:</strong> {contact_person}</p>}
           {phone && (
-            <p><strong>Phone:</strong> <a href={`tel:${phone}`} className="text-blue-600 underline">{phone}</a></p>
+            <p>
+              <strong>Phone:</strong>{" "}
+              <a href={`tel:${phone}`} className="text-blue-600 underline">
+                {phone}
+              </a>
+              {phone_label && (
+                <span className="text-muted-foreground text-sm ml-1">
+                  ({phone_label || "work"})
+                </span>
+              )}
+            </p>
+          )}
+          {secondary_phone && (
+            <p>
+              <strong>Alt:</strong>{" "}
+              <a href={`tel:${secondary_phone}`} className="text-blue-600 underline">
+                {secondary_phone}
+              </a>
+              {secondary_phone_label && (
+                <span className="text-muted-foreground text-sm ml-1">
+                  ({secondary_phone_label || "mobile"})
+                </span>
+              )}
+            </p>
           )}
           {email && (
             <p><strong>Email:</strong> <a href={`mailto:${email}`} className="text-blue-600 underline">{email}</a></p>

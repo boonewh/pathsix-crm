@@ -214,4 +214,6 @@ Export as CSV or PDF
 
 We can build that straight onto this solid foundation.
 
-Let me know what’s next!
+
+COMPONENTS:
+Take LeadDetailPage and ClientDetailPage and extract reusable components.

@@ -28,8 +28,46 @@ export default function ClientForm({ form, setForm }: ClientFormProps) {
         <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="phone">Phone</Label>
-        <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <Label htmlFor="phone">Primary Phone</Label>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            id="phone"
+            value={form.phone || ""}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="(123) 456-7890"
+            className="col-span-2"
+          />
+          <select
+            id="phone_label"
+            value={form.phone_label || "work"}
+            onChange={(e) => setForm({ ...form, phone_label: e.target.value as "work" | "mobile" })}
+            className="border border-input bg-background text-sm rounded-md px-2 py-1"
+          >
+            <option value="work">Work</option>
+            <option value="mobile">Mobile</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="secondary_phone">Secondary Phone <span className="text-muted-foreground text-sm">(optional)</span></Label>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            id="secondary_phone"
+            value={form.secondary_phone || ""}
+            onChange={(e) => setForm({ ...form, secondary_phone: e.target.value })}
+            placeholder="(123) 555-6789"
+            className="col-span-2"
+          />
+          <select
+            id="secondary_phone_label"
+            value={form.secondary_phone_label || "mobile"}
+            onChange={(e) => setForm({ ...form, secondary_phone_label: e.target.value as "work" | "mobile" })}
+            className="border border-input bg-background text-sm rounded-md px-2 py-1"
+          >
+            <option value="mobile">Mobile</option>
+            <option value="work">Work</option>
+          </select>
+        </div>
       </div>
       <div className="grid gap-2">
         <Label htmlFor="address">Address</Label>

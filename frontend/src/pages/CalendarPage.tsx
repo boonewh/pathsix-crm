@@ -22,6 +22,9 @@ interface CalendarEvent {
     contact_person?: string;
     email?: string;
     phone?: string;
+    phone_label?: "work" | "mobile";
+    secondary_phone?: string;
+    secondary_phone_label?: "work" | "mobile";
     profile_link?: string;
   };
 }
@@ -59,6 +62,9 @@ export default function CalendarPage() {
           contact_person: i.contact_person,
           email: i.email,
           phone: i.phone,
+          phone_label: i.phone_label,
+          secondary_phone: i.secondary_phone,
+          secondary_phone_label: i.secondary_phone_label,
           profile_link: i.profile_link,
         },
       }));
@@ -73,20 +79,22 @@ export default function CalendarPage() {
   function handleEventClick(arg: any) {
     const { event } = arg;
 
-    const customEvent: CalendarEvent = {
-      id: event.id,
-      title: event.title,
-      start: event.start!,
-      extendedProps: {
-        outcome: event.extendedProps["outcome"],
-        notes: event.extendedProps["notes"],
-        contact_person: event.extendedProps["contact_person"],
-        email: event.extendedProps["email"],
-        phone: event.extendedProps["phone"],
-        profile_link: event.extendedProps["profile_link"],
-      },
-    };
-
+  const customEvent: CalendarEvent = {
+    id: event.id,
+    title: event.title,
+    start: event.start!,
+    extendedProps: {
+      outcome: event.extendedProps["outcome"],
+      notes: event.extendedProps["notes"],
+      contact_person: event.extendedProps["contact_person"],
+      email: event.extendedProps["email"],
+      phone: event.extendedProps["phone"],
+      phone_label: event.extendedProps["phone_label"],
+      secondary_phone: event.extendedProps["secondary_phone"],
+      secondary_phone_label: event.extendedProps["secondary_phone_label"],
+      profile_link: event.extendedProps["profile_link"],
+    },
+  };
     setSelectedEvent(customEvent);
   }
 
@@ -205,10 +213,13 @@ export default function CalendarPage() {
           contact_person={selectedEvent.extendedProps.contact_person}
           email={selectedEvent.extendedProps.email}
           phone={selectedEvent.extendedProps.phone}
+          phone_label={selectedEvent.extendedProps.phone_label}
+          secondary_phone={selectedEvent.extendedProps.secondary_phone}
+          secondary_phone_label={selectedEvent.extendedProps.secondary_phone_label}
           profile_link={selectedEvent.extendedProps.profile_link}
           onClose={() => setSelectedEvent(null)}
           calendarLink={generateGoogleCalendarUrl(selectedEvent)}
-          icsLink={`/api/interactions/${selectedEvent.id}/calendar.ics`}  // 👈 Add this line
+          icsLink={`/api/interactions/${selectedEvent.id}/calendar.ics`}
         />
       )}
     </div>

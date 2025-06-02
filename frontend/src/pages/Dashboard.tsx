@@ -25,7 +25,10 @@ export default function Dashboard() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then(setInteractions);
+      .then((data) => {
+        console.log("Dashboard interactions:", data); // 👈 check for phone_label etc
+        setInteractions(data);
+      });
   }, [token]);
 
   useEffect(() => {
@@ -78,7 +81,10 @@ export default function Dashboard() {
               <li
                 key={i.id}
                 className="text-gray-700 hover:bg-gray-100 px-2 py-1 rounded cursor-pointer"
-                onClick={() => setSelectedInteraction(i)}
+                onClick={() => {
+                  console.log("Selected interaction:", i); // 👈 confirm labels are there
+                  setSelectedInteraction(i);
+                }}
               >
                 <span className="font-medium text-gray-800 mr-1">
                   {i.client_name || i.lead_name}
@@ -162,6 +168,9 @@ export default function Dashboard() {
           contact_person={selectedInteraction.contact_person}
           email={selectedInteraction.email}
           phone={selectedInteraction.phone}
+          phone_label={selectedInteraction.phone_label}
+          secondary_phone={selectedInteraction.secondary_phone}
+          secondary_phone_label={selectedInteraction.secondary_phone_label}
           profile_link={selectedInteraction.profile_link}
           onClose={() => setSelectedInteraction(null)}
           onMarkComplete={async () => {

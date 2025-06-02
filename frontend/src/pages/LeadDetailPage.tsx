@@ -250,11 +250,35 @@ export default function LeadDetailPage() {
           </li>
         )}
         {lead.phone && (
-          <li className="flex items-center gap-2">
-            <Phone size={14} />
-            <a href={`tel:${lead.phone}`} className="text-blue-600 underline">
-              {lead.phone}
-            </a>
+          <li className="flex items-start gap-2">
+            <Phone size={14} className="mt-[2px]" />
+            <div className="leading-tight">
+              <div>
+                <a href={`tel:${lead.phone}`} className="text-blue-600 underline">
+                  {lead.phone}
+                </a>
+                {lead.phone_label && (
+                  <span className="text-muted-foreground text-sm ml-1">
+                    ({lead.phone_label})
+                  </span>
+                )}
+              </div>
+              {lead.secondary_phone && (
+                <div>
+                  <a
+                    href={`tel:${lead.secondary_phone}`}
+                    className="text-blue-600 underline"
+                  >
+                    {lead.secondary_phone}
+                  </a>
+                  {lead.secondary_phone_label && (
+                    <span className="text-muted-foreground text-sm ml-1">
+                      ({lead.secondary_phone_label})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </li>
         )}
         <li className="flex items-start gap-2">
