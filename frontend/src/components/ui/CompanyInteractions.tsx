@@ -287,7 +287,7 @@ export default function CompanyInteractions({
             }
             icsLink={
               selectedInteraction.follow_up
-                ? `/api/interactions/${selectedInteraction.id}/calendar.ics`
+                ? `${import.meta.env.VITE_BACKEND_URL}/api/interactions/${selectedInteraction.id}/calendar.ics`
                 : undefined
             }
           />
