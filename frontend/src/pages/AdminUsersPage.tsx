@@ -20,7 +20,7 @@ export default function AdminUsersPage() {
   const [role, setRole] = useState("user");
   const [showForm, setShowForm] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [editedEmail, setEditedEmail] = useState<string>("");
 
@@ -74,7 +74,8 @@ export default function AdminUsersPage() {
   };
 
   const handleClickOutside = (e: MouseEvent) => {
-    if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+    const activeRef = openMenuId !== null ? menuRefs.current[openMenuId] : null;
+    if (activeRef && !activeRef.contains(e.target as Node)) {
       setOpenMenuId(null);
     }
   };
@@ -212,7 +213,13 @@ export default function AdminUsersPage() {
               </p>
             </div>
 
-            <div className="relative" ref={menuRef}>
+            <div
+              className="relative"
+              ref={(el: HTMLDivElement | null): void => {
+                menuRefs.current[user.id] = el;
+              }}
+            >
+
               <button
                 onClick={() =>
                   setOpenMenuId((prev) => (prev === user.id ? null : user.id))
@@ -301,7 +308,13 @@ export default function AdminUsersPage() {
                   </p>
                 </div>
 
-                <div className="relative" ref={menuRef}>
+                <div
+                  className="relative"
+                  ref={(el: HTMLDivElement | null): void => {
+                    menuRefs.current[user.id] = el;
+                  }}
+                >
+
                   <button
                     onClick={() =>
                       setOpenMenuId((prev) => (prev === user.id ? null : user.id))
