@@ -87,7 +87,7 @@ async def recent_activity():
                     "entity_type": entity_type,
                     "entity_id": entity_id,
                     "name": name,
-                    "last_touched": last_touched.isoformat(),
+                    "last_touched": last_touched.isoformat() + "Z",
                     "profile_link": profile_link
                 })
 

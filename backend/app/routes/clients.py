@@ -3,6 +3,7 @@ from app.models import Client, ActivityLog, ActivityType
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 from datetime import datetime
+from sqlalchemy import or_
 
 clients_bp = Blueprint("clients", __name__, url_prefix="/api/clients")
 
@@ -34,7 +35,7 @@ async def list_clients():
                 "state": c.state,
                 "zip": c.zip,
                 "notes": c.notes,
-                "created_at": c.created_at.isoformat()
+                "created_at": c.created_at.isoformat() + "Z"
             } for c in clients
         ])
         response.headers["Cache-Control"] = "no-store"
@@ -83,13 +84,15 @@ async def get_client(client_id):
         client = session.query(Client).filter(
             Client.id == client_id,
             Client.tenant_id == user.tenant_id,
-            Client.created_by == user.id,
-            Client.deleted_at == None
+            Client.deleted_at == None,
+            or_(
+                Client.created_by == user.id,
+                Client.assigned_to == user.id
+            )
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
 
-        # Log the view
         log = ActivityLog(
             tenant_id=user.tenant_id,
             user_id=user.id,
@@ -99,9 +102,7 @@ async def get_client(client_id):
             description=f"Viewed client '{client.name}'"
         )
         session.add(log)
-
         session.commit()
-        session.refresh(client)
 
         response = jsonify({
             "id": client.id,
@@ -118,7 +119,7 @@ async def get_client(client_id):
             "state": client.state,
             "zip": client.zip,
             "notes": client.notes,
-            "created_at": client.created_at.isoformat()
+            "created_at": client.created_at.isoformat() + "Z"
         })
         response.headers["Cache-Control"] = "no-store"
         return response
@@ -135,7 +136,11 @@ async def update_client(client_id):
         client = session.query(Client).filter(
             Client.id == client_id,
             Client.tenant_id == user.tenant_id,
-            Client.deleted_at == None
+            Client.deleted_at == None,
+            or_(
+                Client.created_by == user.id,
+                Client.assigned_to == user.id
+            )
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
@@ -147,15 +152,16 @@ async def update_client(client_id):
         ]:
             if field in data:
                 setattr(client, field, data[field])
-        
+
         client.updated_by = user.id
-        client.updated_at = datetime.utcnow()  # Only needed if you drop onupdate later
+        client.updated_at = datetime.utcnow()
 
         session.commit()
         session.refresh(client)
         return jsonify({"id": client.id})
     finally:
         session.close()
+
 
 @clients_bp.route("/<int:client_id>", methods=["DELETE"])
 @requires_auth()
@@ -165,7 +171,12 @@ async def delete_client(client_id):
     try:
         client = session.query(Client).filter(
             Client.id == client_id,
-            Client.tenant_id == user.tenant_id
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at == None,
+            or_(
+                Client.created_by == user.id,
+                Client.assigned_to == user.id
+            )
         ).first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
@@ -174,9 +185,9 @@ async def delete_client(client_id):
         client.deleted_by = user.id
         session.commit()
         return jsonify({"message": "Client soft-deleted successfully"})
-
     finally:
         session.close()
+
 
 @clients_bp.route("/<int:client_id>/assign", methods=["PUT"])
 @requires_auth(roles=["admin"])

@@ -27,7 +27,7 @@ async def list_accounts():
                 "account_number": a.account_number,
                 "account_name": a.account_name,
                 "status": a.status,
-                "opened_on": a.opened_on.isoformat() if a.opened_on else None,
+                "opened_on": a.opened_on.isoformat() + "Z" if a.opened_on else None,
                 "notes": a.notes
             } for a in accounts
         ])
@@ -159,7 +159,7 @@ async def get_account(account_id):
             "status": account.status,
             "notes": account.notes,
             "client_id": account.client_id,
-            "opened_on": account.opened_on.isoformat() if account.opened_on else None
+            "opened_on": account.opened_on.isoformat() + "Z" if account.opened_on else None
         })
         response.headers["Cache-Control"] = "no-store"
         return response

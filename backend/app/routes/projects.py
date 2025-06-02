@@ -31,7 +31,7 @@ async def list_projects():
                 "lead_id": p.lead_id,
                 "client_name": p.client.name if p.client else None,
                 "lead_name": p.lead.name if p.lead else None,
-                "created_at": p.created_at.isoformat() if p.created_at else None
+                "created_at": p.created_at.isoformat() + "Z" if p.created_at else None
             } for p in projects
         ])
     finally:
@@ -70,15 +70,15 @@ async def get_project(project_id):
             "project_name": project.project_name,
             "project_status": project.project_status,
             "project_description": project.project_description,
-            "project_start": project.project_start.isoformat() if project.project_start else None,
-            "project_end": project.project_end.isoformat() if project.project_end else None,
+            "project_start": project.project_start.isoformat() + "Z" if project.project_start else None,
+            "project_end": project.project_end.isoformat() + "Z" if project.project_end else None,
             "project_worth": project.project_worth,
             "client_id": project.client_id,
             "lead_id": project.lead_id,
             "client_name": project.client.name if project.client else None,
             "lead_name": project.lead.name if project.lead else None,
             "created_by": project.created_by,
-            "created_at": project.created_at.isoformat() if project.created_at else None,
+            "created_at": project.created_at.isoformat() + "Z" if project.created_at else None,
         })
     finally:
         session.close()

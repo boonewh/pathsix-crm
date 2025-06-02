@@ -20,7 +20,7 @@ async def list_users():
             {
                 "id": u.id,
                 "email": u.email,
-                "created_at": u.created_at.isoformat(),
+                "created_at": u.created_at.isoformat() + "Z",
                 "roles": get_roles(u),
                 "is_active": u.is_active
             }
@@ -167,7 +167,7 @@ async def update_user_email(user_id):
             "id": target.id,
             "email": target.email,
             "roles": [r.name for r in target.roles],
-            "created_at": target.created_at.isoformat(),
+            "created_at": target.created_at.isoformat() + "Z",
             "is_active": target.is_active
         })
 

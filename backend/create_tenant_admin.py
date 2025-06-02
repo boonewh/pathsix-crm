@@ -1,5 +1,3 @@
-# create_tenant_admin.py
-
 from app.models import User, Role
 from app.database import SessionLocal
 from app.utils.auth_utils import hash_password
@@ -17,13 +15,18 @@ try:
     max_tenant = session.query(func.max(User.tenant_id)).scalar()
     next_tenant_id = (max_tenant or 0) + 1
 
-    # Check if admin role exists
+    # Ensure both roles exist
     admin_role = session.query(Role).filter_by(name="admin").first()
     if not admin_role:
         admin_role = Role(name="admin")
         session.add(admin_role)
-        session.commit()
-        session.refresh(admin_role)
+
+    user_role = session.query(Role).filter_by(name="user").first()
+    if not user_role:
+        user_role = Role(name="user")
+        session.add(user_role)
+
+    session.commit()  # ✅ commit both roles before using
 
     # Create the admin user
     new_admin = User(
@@ -40,6 +43,7 @@ try:
     print(f"   Email: {ADMIN_EMAIL}")
     print(f"   Password: {ADMIN_PASSWORD}")
     print(f"   Tenant ID: {next_tenant_id}\n")
+
 except Exception as e:
     session.rollback()
     print("❌ Error:", e)
