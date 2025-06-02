@@ -81,15 +81,22 @@ async def get_client(client_id):
     user = request.user
     session = SessionLocal()
     try:
-        client = session.query(Client).filter(
+        client_query = session.query(Client).filter(
             Client.id == client_id,
             Client.tenant_id == user.tenant_id,
             Client.deleted_at == None,
-            or_(
-                Client.created_by == user.id,
-                Client.assigned_to == user.id
+        )
+
+        # Only restrict visibility if not admin
+        if not any(role.name == "admin" for role in user.roles):
+            client_query = client_query.filter(
+                or_(
+                    Client.created_by == user.id,
+                    Client.assigned_to == user.id
+                )
             )
-        ).first()
+
+        client = client_query.first()
         if not client:
             return jsonify({"error": "Client not found"}), 404
 

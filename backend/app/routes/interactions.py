@@ -266,8 +266,10 @@ async def list_all_interactions_admin():
     session = SessionLocal()
     try:
         interactions = session.query(Interaction).options(
-            joinedload(Interaction.client),
-            joinedload(Interaction.lead)
+            joinedload(Interaction.client).joinedload(Client.assigned_user),
+            joinedload(Interaction.client).joinedload(Client.created_by_user),
+            joinedload(Interaction.lead).joinedload(Lead.assigned_user),
+            joinedload(Interaction.lead).joinedload(Lead.created_by_user)
         ).filter(
             Interaction.tenant_id == user.tenant_id
         ).order_by(Interaction.contact_date.desc()).all()
@@ -283,11 +285,31 @@ async def list_all_interactions_admin():
             "lead_id": i.lead_id,
             "client_name": i.client.name if i.client else None,
             "lead_name": i.lead.name if i.lead else None,
-            "contact_person": i.contact_person,
-            "email": i.email,
-            "phone": i.phone,
+            "contact_person": (
+                i.contact_person.strip() if i.contact_person and i.contact_person.strip()
+                else i.client.contact_person if i.client
+                else i.lead.contact_person if i.lead
+                else None
+            ),
+            "email": (
+                i.email or
+                i.client.email if i.client else
+                i.lead.email if i.lead else None
+            ),
+            "phone": (
+                i.phone or
+                i.client.phone if i.client else
+                i.lead.phone if i.lead else None
+            ),
             "followup_status": i.followup_status.value if i.followup_status else None,
-            "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None
+            "profile_link": f"/clients/{i.client_id}" if i.client_id else f"/leads/{i.lead_id}" if i.lead_id else None,
+            "assigned_to_name": (
+                i.client.assigned_user.email if i.client and i.client.assigned_user
+                else i.client.created_by_user.email if i.client and i.client.created_by_user
+                else i.lead.assigned_user.email if i.lead and i.lead.assigned_user
+                else i.lead.created_by_user.email if i.lead and i.lead.created_by_user
+                else None
+            )
         } for i in interactions])
     finally:
         session.close()

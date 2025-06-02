@@ -98,15 +98,22 @@ async def get_lead(lead_id):
     user = request.user
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter(
+        lead_query = session.query(Lead).filter(
             Lead.id == lead_id,
             Lead.tenant_id == user.tenant_id,
-            or_(
-                Lead.created_by == user.id,
-                Lead.assigned_to == user.id
-            ),
             Lead.deleted_at == None
-        ).first()
+        )
+
+        # Only restrict access if not admin
+        if not any(role.name == "admin" for role in user.roles):
+            lead_query = lead_query.filter(
+                or_(
+                    Lead.created_by == user.id,
+                    Lead.assigned_to == user.id
+                )
+            )
+
+        lead = lead_query.first()
 
         if not lead:
             return jsonify({"error": "Lead not found"}), 404
