@@ -6,6 +6,7 @@ from functools import wraps
 from app.models import User
 from app.database import SessionLocal
 from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy.exc import SQLAlchemyError
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
@@ -20,7 +21,6 @@ def create_token(user: User) -> str:
         "email": user.email,
         "roles": [r.name for r in user.roles],
         "exp": int(time.time()) + 30 * 86400  # 30 days
-
     }
     return jwt.encode(header, payload, current_app.config["SECRET_KEY"]).decode("utf-8")
 
@@ -43,15 +43,19 @@ def requires_auth(roles: list = None):
             session = SessionLocal()
             try:
                 user = session.get(User, payload["sub"])
-                if not user:
-                    return jsonify({"error": "User not found"}), 401
-                if roles and not any(role in payload["roles"] for role in roles):
-                    return jsonify({"error": "Forbidden"}), 403
-
-                request.user = user
-                return await fn(*args, **kwargs)
+            except SQLAlchemyError as e:
+                session.rollback()
+                return jsonify({"error": "Database error"}), 500
             finally:
                 session.close()
+
+            if not user:
+                return jsonify({"error": "User not found"}), 401
+            if roles and not any(role in payload["roles"] for role in roles):
+                return jsonify({"error": "Forbidden"}), 403
+
+            request.user = user
+            return await fn(*args, **kwargs)
         return decorated
     return wrapper
 

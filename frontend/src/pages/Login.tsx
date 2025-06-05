@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/authContext";
 import { useNavigate } from "react-router-dom";
 import { FormWrapper } from "@/components/ui/FormWrapper";
@@ -6,22 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { logFrontendError } from "@/lib/logger";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const [retrying, setRetrying] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email || !password) {
-      alert("Please enter both email and password.");
-      return;
+  useEffect(() => {
+    if (attempts >= 6) {
+      setTimeout(() => {
+        setRetrying(false);
+        setErrorMessage("Unable to reach server. Try again later.");
+        navigate("/login");
+      }, 5000);
     }
+  }, [attempts, navigate]);
 
-    setLoading(true);
+  const tryLogin = async () => {
     try {
       const res = await apiFetch("/login", {
         method: "POST",
@@ -31,17 +38,46 @@ export default function Login() {
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data?.token) {
         login(data.token);
+        setLoading(false);
+        setRetrying(false);
         navigate("/dashboard");
       } else {
-        alert(data.error || "Login failed");
+        throw new Error(data?.error || "Server rejected login");
       }
     } catch (err) {
-      alert("Server error");
-    } finally {
-      setLoading(false);
+      logFrontendError("Login retry failure", {
+        email,
+        error: err instanceof Error ? err.message : String(err),
+        attempt: attempts,
+      });
+
+      if (attempts < 6) {
+        setTimeout(() => {
+          setAttempts((prev) => prev + 1);
+          tryLogin();
+        }, 1000);
+      } else {
+        setErrorMessage("Unable to reach server. Please try again shortly.");
+        setLoading(false);
+        setRetrying(false);
+      }
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+    setRetrying(true);
+    setAttempts(1);
+    tryLogin();
   };
 
   return (
@@ -75,9 +111,13 @@ export default function Login() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Log In"}
+            <Button type="submit" className="w-full" disabled={loading || retrying}>
+              {retrying ? `🔄 Connecting to server... (${attempts}/6)` : "Log In"}
             </Button>
+
+            {errorMessage && (
+              <p className="text-red-600 text-sm text-center mt-2">{errorMessage}</p>
+            )}
 
             <div className="text-right mt-1">
               <a

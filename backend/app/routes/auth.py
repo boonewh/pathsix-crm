@@ -1,4 +1,5 @@
 from quart import Blueprint, request, jsonify, current_app
+from sqlalchemy.exc import SQLAlchemyError
 from app.models import User
 from app.database import SessionLocal
 from app.utils.auth_utils import (
@@ -41,6 +42,9 @@ async def login():
         })
         response.headers["Cache-Control"] = "no-store"
         return response
+    except SQLAlchemyError as e:
+        session.rollback()
+        return jsonify({"error": "Server error"}), 500
     finally:
         session.close()
 
@@ -68,6 +72,9 @@ async def forgot_password():
         print("Reset link:", reset_link)
 
         return jsonify({"message": "If that account exists, a reset email was sent."})
+    except SQLAlchemyError:
+        session.rollback()
+        return jsonify({"error": "Server error"}), 500
     finally:
         session.close()
 
@@ -94,6 +101,9 @@ async def reset_password():
         session.commit()
 
         return jsonify({"message": "Password updated successfully"})
+    except SQLAlchemyError:
+        session.rollback()
+        return jsonify({"error": "Server error"}), 500
     finally:
         session.close()
 
@@ -117,5 +127,8 @@ async def change_password():
         user.password_hash = hash_password(new_password)
         session.commit()
         return jsonify({"message": "Password changed successfully"})
+    except SQLAlchemyError:
+        session.rollback()
+        return jsonify({"error": "Server error"}), 500
     finally:
         session.close()
