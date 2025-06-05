@@ -2,6 +2,7 @@ from quart import Quart
 from quart_cors import cors
 from app.config import SECRET_KEY
 from app.routes import register_blueprints
+from app.utils.keep_alive import keep_db_alive  # 👈 import the task
 
 def create_app():
     app = Quart(__name__)
@@ -18,6 +19,11 @@ def create_app():
 
     # ✅ Register routes AFTER CORS is applied
     register_blueprints(app)
+
+    # ✅ Add the keep-alive task BEFORE serving starts
+    @app.before_serving
+    async def startup():
+        app.add_background_task(keep_db_alive)
 
     return app
 
