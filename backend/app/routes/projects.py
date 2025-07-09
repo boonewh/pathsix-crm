@@ -21,6 +21,8 @@ def parse_date_with_default_time(value):
         except ValueError:
             return None
 
+
+
 @projects_bp.route("/", methods=["GET"])
 @requires_auth()
 async def list_projects():
@@ -30,8 +32,7 @@ async def list_projects():
         page = int(request.args.get("page", 1))
         per_page = int(request.args.get("per_page", 20))
         sort_order = request.args.get("sort", "newest")
-        
-        # Validate sort order
+
         if sort_order not in ["newest", "oldest", "alphabetical"]:
             sort_order = "newest"
 
@@ -39,11 +40,35 @@ async def list_projects():
             joinedload(Project.client),
             joinedload(Project.lead)
         ).filter(
-            Project.tenant_id == user.tenant_id,
-            Project.created_by == user.id
+            Project.tenant_id == user.tenant_id
+        ).filter(
+            or_(
+                # Projects tied to clients assigned to or created by the user
+                and_(
+                    Project.client_id != None,
+                    or_(
+                        Project.client.has(Client.assigned_to == user.id),
+                        Project.client.has(Client.created_by == user.id)
+                    )
+                ),
+                # Projects tied to leads assigned to or created by the user
+                and_(
+                    Project.lead_id != None,
+                    or_(
+                        Project.lead.has(Lead.assigned_to == user.id),
+                        Project.lead.has(Lead.created_by == user.id)
+                    )
+                ),
+                # Projects with no client or lead but created by the user
+                and_(
+                    Project.client_id == None,
+                    Project.lead_id == None,
+                    Project.created_by == user.id
+                )
+            )
         )
 
-        # Apply sorting
+        # Sorting
         if sort_order == "newest":
             query = query.order_by(Project.created_at.desc())
         elif sort_order == "oldest":
@@ -71,7 +96,6 @@ async def list_projects():
                     "client_name": p.client.name if p.client else None,
                     "lead_name": p.lead.name if p.lead else None,
                     "created_at": p.created_at.isoformat() if p.created_at else None,
-                    # NEW: Include contact fields in response
                     "primary_contact_name": p.primary_contact_name,
                     "primary_contact_title": p.primary_contact_title,
                     "primary_contact_email": p.primary_contact_email,
@@ -88,6 +112,8 @@ async def list_projects():
         return response
     finally:
         session.close()
+
+
 
 
 @projects_bp.route("/<int:project_id>", methods=["GET"])
