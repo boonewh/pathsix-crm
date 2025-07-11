@@ -73,7 +73,15 @@ export default function LeadImporter() {
     { field: 'lead_status', required: false, description: 'Lead status (open, qualified, proposal, closed)', example: 'open' }
   ];
 
-  // Load users on component mount - keep using apiFetch for this since it works
+  const businessTypes = [
+    'None', 'Oil & Gas', 'Secondary Containment', 'Tanks', 'Pipe',
+    'Rental', 'Food and Beverage', 'Bridge', 'Culvert'
+  ];
+
+  const leadStatuses = ['open', 'qualified', 'proposal', 'closed'];
+  const phoneLabels = ['work', 'mobile', 'home', 'fax', 'other'];
+
+  // Load users on component mount
   useEffect(() => {
     const loadUsers = async () => {
       try {
@@ -108,21 +116,20 @@ export default function LeadImporter() {
     setIsProcessingFile(true);
 
     try {
-      // Process file to get preview - HARDCODED URL LIKE WORKING VERSION
+      // Process file to get preview
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const res = await fetch('https://pathsix-backend.fly.dev/api/import/leads/preview', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/import/leads/preview`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          // Don't set Content-Type for FormData
         },
         body: formData,
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to process file: ${res.status} ${res.statusText}`);
+        throw new Error('Failed to process file');
       }
 
       const preview: PreviewData = await res.json();
@@ -172,7 +179,6 @@ export default function LeadImporter() {
       setCurrentStep('mapping');
 
     } catch (err: any) {
-      console.error('File processing error:', err);
       setError(err.message || 'Failed to process file');
       setFile(null);
     } finally {
@@ -225,12 +231,10 @@ export default function LeadImporter() {
       formData.append('assigned_user_email', selectedUser);
       formData.append('column_mappings', JSON.stringify(columnMappings));
 
-      // HARDCODED URL LIKE WORKING VERSION
-      const res = await fetch('https://pathsix-backend.fly.dev/api/import/leads/generic', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/import/leads/generic`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          // Don't set Content-Type for FormData
         },
         body: formData,
       });
@@ -277,8 +281,7 @@ export default function LeadImporter() {
 
   const downloadTemplate = async () => {
     try {
-      // HARDCODED URL LIKE WORKING VERSION
-      const res = await fetch('https://pathsix-backend.fly.dev/import/leads/generic-template', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/import/leads/generic-template`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -303,7 +306,7 @@ export default function LeadImporter() {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Generic Lead Importer
+          Lead Importer
         </h3>
         <button
           onClick={downloadTemplate}

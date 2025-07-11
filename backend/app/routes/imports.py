@@ -1,5 +1,3 @@
-# Add these routes to your existing import.py or create a new import_generic.py
-
 from quart import Blueprint, request, jsonify, g
 from werkzeug.utils import secure_filename
 import pandas as pd
