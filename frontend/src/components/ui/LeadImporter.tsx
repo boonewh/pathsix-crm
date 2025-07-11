@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Download, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '@/authContext';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 interface User {
   id: number;
