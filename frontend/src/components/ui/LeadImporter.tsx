@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, Download, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '@/authContext';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 interface User {
   id: number;
@@ -83,7 +83,7 @@ export default function LeadImporter() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const res = await fetch(`${API_BASE}/api/import/leads/preview`, {
+      const res = await fetch(`${API_BASE}/import/leads/preview`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -153,7 +153,7 @@ export default function LeadImporter() {
       formData.append('assigned_user_email', selectedUser);
       formData.append('column_mappings', JSON.stringify(columnMappings));
 
-      const res = await fetch(`${API_BASE}/api/import/leads/submit`, {
+      const res = await fetch(`${API_BASE}/import/leads/submit`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -184,7 +184,7 @@ export default function LeadImporter() {
 
   const downloadTemplate = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/import/leads/template`, {
+      const res = await fetch(`${API_BASE}/import/leads/template`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to download template');
