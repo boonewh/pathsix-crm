@@ -50,7 +50,7 @@ export default function LeadImporter() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/users/`, {
+        const res = await fetch(`${API_BASE}/users/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
