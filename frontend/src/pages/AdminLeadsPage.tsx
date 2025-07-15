@@ -162,6 +162,42 @@ export default function AdminLeadsPage() {
             className="border-b pb-4"
           />
 
+          {selectedLeadIds.length > 0 && (
+            <div className="mb-4">
+              <button
+                onClick={async () => {
+                  if (!confirm(`Delete ${selectedLeadIds.length} selected lead(s)?`)) return;
+
+                  const res = await apiFetch("/leads/bulk-delete", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ lead_ids: selectedLeadIds }),
+                  });
+
+                  if (res.ok) {
+                    const refreshed = await apiFetch(
+                      `/leads/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+                      { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    const data = await refreshed.json();
+                    setLeads(data.leads);
+                    setTotal(data.total);
+                    clearSelection();
+                  } else {
+                    alert("Failed to delete selected leads");
+                  }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Delete Selected ({selectedLeadIds.length})
+              </button>
+            </div>
+          )}
+
+
           {/* Content */}
           {loading ? (
             <div className="text-gray-500 text-center py-10">Loading...</div>
