@@ -204,20 +204,25 @@ async def update_lead(lead_id):
     
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter(
+        lead_query = session.query(Lead).filter(
             Lead.id == lead_id,
             Lead.tenant_id == user.tenant_id,
-            or_(
-                Lead.created_by == user.id,
-                Lead.assigned_to == user.id
-            ),
             Lead.deleted_at == None
-        ).first()
+        )
 
+        if not any(role.name == "admin" for role in user.roles):
+            lead_query = lead_query.filter(
+                or_(
+                    Lead.created_by == user.id,
+                    Lead.assigned_to == user.id
+                )
+            )
+
+        lead = lead_query.first()
         if not lead:
             return jsonify({"error": "Lead not found"}), 404
 
-        # Process basic fields (excluding lead_status)
+        # Process basic fields
         for field in [
             "name", "contact_person", "contact_title", "email", "phone_label",
             "secondary_phone_label", "address", "city", "state", "zip", "notes"
@@ -225,7 +230,6 @@ async def update_lead(lead_id):
             if field in data:
                 setattr(lead, field, data[field] or None)
 
-        # Handle phone fields
         if "phone" in data:
             lead.phone = clean_phone_number(data["phone"]) if data["phone"] else None
         if "secondary_phone" in data:
@@ -234,13 +238,10 @@ async def update_lead(lead_id):
         if "lead_status" in data:
             new_status = data["lead_status"]
             if new_status in LEAD_STATUS_OPTIONS:
-                # Set converted_on timestamp if changing TO closed status (final status)
                 if new_status == "closed" and lead.lead_status != "closed":
                     lead.converted_on = datetime.utcnow()
-                # Always update the status if it's valid
                 lead.lead_status = new_status
 
-        # Handle type
         if "type" in data and data["type"] in TYPE_OPTIONS:
             lead.type = data["type"]
 
@@ -249,7 +250,6 @@ async def update_lead(lead_id):
 
         session.commit()
         session.refresh(lead)
-
         return jsonify({"id": lead.id})
     finally:
         session.close()
@@ -261,16 +261,21 @@ async def delete_lead(lead_id):
     user = request.user
     session = SessionLocal()
     try:
-        lead = session.query(Lead).filter(
+        lead_query = session.query(Lead).filter(
             Lead.id == lead_id,
             Lead.tenant_id == user.tenant_id,
-            or_(
-                Lead.created_by == user.id,
-                Lead.assigned_to == user.id
-            ),
             Lead.deleted_at == None
-        ).first()
+        )
 
+        if not any(role.name == "admin" for role in user.roles):
+            lead_query = lead_query.filter(
+                or_(
+                    Lead.created_by == user.id,
+                    Lead.assigned_to == user.id
+                )
+            )
+
+        lead = lead_query.first()
         if not lead:
             return jsonify({"error": "Lead not found"}), 404
 
@@ -280,6 +285,7 @@ async def delete_lead(lead_id):
         return jsonify({"message": "Lead soft-deleted successfully"})
     finally:
         session.close()
+
 
 
 @leads_bp.route("/<int:lead_id>/assign", methods=["PUT"])

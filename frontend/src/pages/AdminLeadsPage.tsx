@@ -2,22 +2,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/authContext";
 import { apiFetch } from "@/lib/api";
 import { Link, useSearchParams } from "react-router-dom";
+import type { Lead } from "@/types";
+import LeadForm from "@/components/ui/LeadForm";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { usePagination } from "@/hooks/usePreferences";
 import { formatPhoneNumber } from "@/lib/phoneUtils";
+import { Wrench } from "lucide-react";
 
-interface AdminLead {
-  id: number;
-  name: string;
-  contact_person?: string;
-  contact_title?: string;
-  email?: string;
-  phone?: string;
+interface AdminLead extends Lead {
   assigned_to_name?: string;
   created_by_name?: string;
-  created_at?: string;
-  lead_status?: string;
-  type?: string;
 }
 
 interface User {
@@ -34,6 +28,15 @@ export default function AdminLeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingLeadId, setEditingLeadId] = useState<number | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [form, setForm] = useState<Partial<AdminLead>>({
+    phone_label: "work",
+    secondary_phone_label: "mobile",
+    lead_status: "open",
+    type: "None",
+  });
+
 
   const selectedEmail = searchParams.get("user") || "";
 
@@ -164,6 +167,7 @@ export default function AdminLeadsPage() {
                     <th className="px-4 py-2 text-left">Type</th>
                     <th className="px-4 py-2 text-left">Assigned To</th>
                     <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-left">Edit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -205,6 +209,20 @@ export default function AdminLeadsPage() {
                           : "—"
                         }
                       </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => {
+                            setEditingLeadId(lead.id);
+                            setForm(lead);
+                            setShowEditModal(true);
+                          }}
+                          className="text-blue-600 hover:underline"
+                          title="Edit Lead"
+                        >
+                          <Wrench size={16} />
+                        </button>
+                      </td>
+
                     </tr>
                   ))}
                   {leads.length === 0 && !loading && (
@@ -234,6 +252,66 @@ export default function AdminLeadsPage() {
             />
           )}
         </>
+      )}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Edit Lead</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingLeadId(null);
+                    setForm({});
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <LeadForm
+                form={form}
+                setForm={setForm}
+                onSave={async () => {
+                  try {
+                    const res = await apiFetch(`/leads/${editingLeadId}`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify(form),
+                    });
+
+                    if (res.ok) {
+                      const leadRes = await apiFetch(
+                        `/leads/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      const updated = await leadRes.json();
+                      setLeads(updated.leads);
+                      setShowEditModal(false);
+                      setEditingLeadId(null);
+                      setForm({});
+                    } else {
+                      alert("Failed to update lead");
+                    }
+                  } catch {
+                    alert("Failed to update lead");
+                  }
+                }}
+
+                onCancel={() => {
+                  setShowEditModal(false);
+                  setEditingLeadId(null);
+                  setForm({});
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

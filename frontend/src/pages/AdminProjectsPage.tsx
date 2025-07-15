@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/authContext";
 import { apiFetch } from "@/lib/api";
 import { Link, useSearchParams } from "react-router-dom";
+import ProjectForm from "@/components/ui/ProjectForm";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { usePagination } from "@/hooks/usePreferences";
+import { Wrench } from "lucide-react";
 
 
 interface AdminProject {
@@ -37,6 +39,11 @@ export default function AdminProjectsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [form, setForm] = useState<Partial<AdminProject>>({});
+  const [clients, setClients] = useState<{ id: number; name: string }[]>([]);
+  const [leads, setLeads] = useState<{ id: number; name: string }[]>([]);
 
   const selectedEmail = searchParams.get("user") || "";
 
@@ -79,16 +86,23 @@ export default function AdminProjectsPage() {
 
       setLoading(true);
       try {
-        const projectRes = await apiFetch(
-          `/projects/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const [projectRes, clientRes, leadRes] = await Promise.all([
+          apiFetch(
+            `/projects/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          ),
+          apiFetch("/clients/", { headers: { Authorization: `Bearer ${token}` } }),
+          apiFetch("/leads/", { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-        const projectsData = await projectRes.json();
-        setProjects(projectsData.projects);
-        setTotal(projectsData.total);
+        const projectData = await projectRes.json();
+        const clientData = await clientRes.json();
+        const leadData = await leadRes.json();
+
+        setProjects(projectData.projects);
+        setTotal(projectData.total);
+        setClients((clientData.clients || clientData).map((c: any) => ({ id: c.id, name: c.name })));
+        setLeads((leadData.leads || leadData).map((l: any) => ({ id: l.id, name: l.name })));
         setError("");
       } catch {
         setError("Failed to load projects");
@@ -99,8 +113,10 @@ export default function AdminProjectsPage() {
       }
     };
 
-    fetchProjects();
-  }, [token, selectedEmail, currentPage, perPage, sortOrder]);
+      fetchProjects();
+    }, [token, selectedEmail, currentPage, perPage, sortOrder]);
+
+
 
   // Reset to page 1 when user selection changes
   useEffect(() => {
@@ -168,6 +184,7 @@ export default function AdminProjectsPage() {
                     <th className="px-4 py-2 text-left">End Date</th>
                     <th className="px-4 py-2 text-left">Assigned To</th>
                     <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-left">Edit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,6 +261,19 @@ export default function AdminProjectsPage() {
                           : "—"
                         }
                       </td>
+                        <td className="px-4 py-2">
+                          <button
+                            onClick={() => {
+                              setEditingProjectId(project.id);
+                              setForm(project);
+                              setShowEditModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Edit Project"
+                          >
+                            <Wrench size={16} />
+                          </button>
+                        </td>
                     </tr>
                   ))}
                   {projects.length === 0 && !loading && (
@@ -274,6 +304,70 @@ export default function AdminProjectsPage() {
           )}
         </>
       )}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Edit Project</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingProjectId(null);
+                    setForm({});
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <ProjectForm
+                form={form}
+                setForm={setForm}
+                clients={clients}
+                leads={leads}
+                onSave={async () => {
+                  try {
+                    const res = await apiFetch(`/projects/${editingProjectId}`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify(form),
+                    });
+
+                    if (res.ok) {
+                      const projectRes = await apiFetch(
+                        `/projects/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
+                      const data = await projectRes.json();
+                      setProjects(data.projects);
+                      setShowEditModal(false);
+                      setEditingProjectId(null);
+                      setForm({});
+                    } else {
+                      alert("Failed to update project");
+                    }
+                  } catch {
+                    alert("Failed to update project");
+                  }
+                }}
+                onCancel={() => {
+                  setShowEditModal(false);
+                  setEditingProjectId(null);
+                  setForm({});
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

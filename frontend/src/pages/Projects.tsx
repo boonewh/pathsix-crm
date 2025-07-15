@@ -410,7 +410,7 @@ export default function Projects() {
                     title={
                       <Link
                         to={`/projects/${project.id}`}
-                        className="hover:underline font-medium text-base block"
+                        className="text-blue-600 hover:underline font-medium text-base block"
                       >
                         {project.project_name}
                       </Link>

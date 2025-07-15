@@ -179,3 +179,19 @@ async def submit_leads():
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
     finally:
         session.close()
+
+
+@imports_bp.route("/leads/template", methods=["GET"])
+@requires_auth()
+async def get_lead_template():
+    headers = [
+        "Company Name", "Contact Person", "Contact Title", "Email", "Phone",
+        "Phone Label", "Secondary Phone", "Secondary Phone Label", "Address",
+        "City", "State", "Zip", "Notes", "Type", "Lead Status"
+    ]
+    csv_data = ",".join(headers) + "\n"
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=lead_import_template.csv"}
+    )

@@ -592,7 +592,7 @@ export default function Clients() {
                   title={
                     <Link
                       to={`/clients/${client.id}`}
-                      className="hover:underline font-medium text-base block"
+                      className="text-blue-600 hover:underline font-medium text-base block"
                     >
                       {client.name}
                     </Link>

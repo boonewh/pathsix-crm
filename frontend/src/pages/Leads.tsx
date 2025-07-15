@@ -442,7 +442,7 @@ export default function Leads() {
                   title={
                     <Link
                       to={`/leads/${lead.id}`}
-                      className="hover:underline font-medium text-base block"
+                      className="text-blue-600 hover:underline font-medium text-base block"
                     >
                       {lead.name}
                     </Link>

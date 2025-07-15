@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/authContext";
 import { apiFetch } from "@/lib/api";
 import { Link, useSearchParams } from "react-router-dom";
+import CompanyForm from "@/components/ui/CompanyForm";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { usePagination } from "@/hooks/usePreferences";
 import { formatPhoneNumber } from "@/lib/phoneUtils";
+import { Wrench } from "lucide-react";
 
 interface AdminClient {
   id: number;
@@ -33,6 +35,9 @@ export default function AdminClientsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingClientId, setEditingClientId] = useState<number | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [form, setForm] = useState<Partial<AdminClient>>({});
 
   const selectedEmail = searchParams.get("user") || "";
 
@@ -162,6 +167,7 @@ export default function AdminClientsPage() {
                     <th className="px-4 py-2 text-left">Type</th>
                     <th className="px-4 py-2 text-left">Assigned To</th>
                     <th className="px-4 py-2 text-left">Created</th>
+                    <th className="px-4 py-2 text-left">Edit</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,6 +199,19 @@ export default function AdminClientsPage() {
                           : "—"
                         }
                       </td>
+                      <td className="px-4 py-2">
+                        <button
+                          onClick={() => {
+                            setEditingClientId(client.id);
+                            setForm(client);
+                            setShowEditModal(true);
+                          }}
+                          className="text-blue-600 hover:underline"
+                          title="Edit Client"
+                        >
+                          <Wrench size={16} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                   {clients.length === 0 && !loading && (
@@ -223,6 +242,70 @@ export default function AdminClientsPage() {
           )}
         </>
       )}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Edit Client</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingClientId(null);
+                    setForm({});
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <CompanyForm
+                form={form}
+                setForm={setForm}
+                onSave={async () => {
+                  try {
+                    const res = await apiFetch(`/clients/${editingClientId}`, {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify(form),
+                    });
+
+                    if (res.ok) {
+                      // refresh current page of clients
+                      setShowEditModal(false);
+                      setEditingClientId(null);
+                      setForm({});
+                      // manually trigger data reload
+                      const clientRes = await apiFetch(
+                        `/clients/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+                        {
+                          headers: { Authorization: `Bearer ${token}` },
+                        }
+                      );
+                      const updated = await clientRes.json();
+                      setClients(updated.clients);
+                    } else {
+                      alert("Failed to update client");
+                    }
+                  } catch {
+                    alert("Failed to update client");
+                  }
+                }}
+                onCancel={() => {
+                  setShowEditModal(false);
+                  setEditingClientId(null);
+                  setForm({});
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
