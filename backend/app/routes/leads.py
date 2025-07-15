@@ -472,3 +472,30 @@ async def list_assigned_leads():
         return response
     finally:
         session.close()
+
+
+@leads_bp.route("/bulk-delete", methods=["POST"])
+@requires_auth(roles=["admin"])
+async def bulk_delete_leads():
+    user = request.user
+    data = await request.get_json()
+    lead_ids = data.get("lead_ids", [])
+
+    if not lead_ids or not isinstance(lead_ids, list):
+        return jsonify({"error": "No lead IDs provided"}), 400
+
+    session = SessionLocal()
+    try:
+        # Soft delete only leads that belong to this tenant and haven't already been deleted
+        updated_count = session.query(Lead).filter(
+            Lead.tenant_id == user.tenant_id,
+            Lead.id.in_(lead_ids),
+            Lead.deleted_at == None
+        ).update(
+            {Lead.deleted_at: datetime.utcnow(), Lead.deleted_by: user.id},
+            synchronize_session=False
+        )
+        session.commit()
+        return jsonify({"message": f"{updated_count} lead(s) deleted"})
+    finally:
+        session.close()

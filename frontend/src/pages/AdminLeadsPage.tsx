@@ -37,6 +37,17 @@ export default function AdminLeadsPage() {
     type: "None",
   });
 
+  const [selectedLeadIds, setSelectedLeadIds] = useState<number[]>([]);
+
+  const toggleLeadSelection = (id: number) => {
+    setSelectedLeadIds((prev) =>
+      prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
+    );
+  };
+
+  const clearSelection = () => setSelectedLeadIds([]);
+
+
 
   const selectedEmail = searchParams.get("user") || "";
 
@@ -159,6 +170,9 @@ export default function AdminLeadsPage() {
               <table className="min-w-full table-auto">
                 <thead className="bg-gray-100">
                   <tr>
+                    <th className="px-4 py-2 text-left">
+                      <span className="sr-only">Select</span>
+                    </th>
                     <th className="px-4 py-2 text-left">Name</th>
                     <th className="px-4 py-2 text-left">Contact</th>
                     <th className="px-4 py-2 text-left">Email</th>
@@ -173,6 +187,14 @@ export default function AdminLeadsPage() {
                 <tbody>
                   {leads.map((lead) => (
                     <tr key={lead.id} className="border-t hover:bg-gray-50 transition">
+                      <td className="px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedLeadIds.includes(lead.id)}
+                          onChange={() => toggleLeadSelection(lead.id)}
+                          className="form-checkbox"
+                        />
+                      </td>
                       <td className="px-4 py-2">
                         <Link
                           to={`/leads/${lead.id}`}
@@ -239,20 +261,57 @@ export default function AdminLeadsPage() {
 
           {/* Pagination Controls at bottom */}
           {total > 0 && (
-            <PaginationControls
-              currentPage={currentPage}
-              perPage={perPage}
-              total={total}
-              sortOrder={sortOrder}
-              onPageChange={setCurrentPage}
-              onPerPageChange={updatePerPage}
-              onSortOrderChange={updateSortOrder}
-              entityName="leads"
-              className="border-t pt-4"
-            />
+            <>
+              <PaginationControls
+                currentPage={currentPage}
+                perPage={perPage}
+                total={total}
+                sortOrder={sortOrder}
+                onPageChange={setCurrentPage}
+                onPerPageChange={updatePerPage}
+                onSortOrderChange={updateSortOrder}
+                entityName="leads"
+                className="border-t pt-4"
+              />
+
+              {selectedLeadIds.length > 0 && (
+                <div className="mb-4">
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Delete ${selectedLeadIds.length} selected lead(s)?`)) return;
+
+                      const res = await apiFetch("/leads/bulk-delete", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ lead_ids: selectedLeadIds }),
+                      });
+
+                      if (res.ok) {
+                        const refreshed = await apiFetch(
+                          `/leads/all?page=${currentPage}&per_page=${perPage}&sort=${sortOrder}&user_email=${encodeURIComponent(selectedEmail)}`,
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        const data = await refreshed.json();
+                        setLeads(data.leads);
+                        setTotal(data.total);
+                        clearSelection();
+                      } else {
+                        alert("Failed to delete selected leads");
+                      }
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  >
+                    Delete Selected ({selectedLeadIds.length})
+                  </button>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+
+
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -309,9 +368,12 @@ export default function AdminLeadsPage() {
                   setForm({});
                 }}
               />
+              
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );
