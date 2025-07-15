@@ -154,7 +154,7 @@ export default function Leads() {
         .then((res) => res.json())
         .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
     }
-  }, [token, currentPage, perPage, sortOrder]);
+  }, [token, user, currentPage, perPage, sortOrder]);
 
   // Advanced filtering logic
   const filteredLeads = leads.filter(lead => {

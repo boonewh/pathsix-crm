@@ -305,7 +305,7 @@ export default function Clients() {
         .then((res) => res.json())
         .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
     }
-  }, [token, currentPage, perPage, sortOrder]);
+  }, [token, user, currentPage, perPage, sortOrder]);
 
   // Filter logic - only type filter now
   const filteredClients = clients.filter(client => {
