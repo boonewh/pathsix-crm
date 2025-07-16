@@ -117,7 +117,7 @@ export default function InteractionModal({
               rel="noopener noreferrer"
               className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
             >
-              Outlook.com
+              Add to Outlook.com Calendar
             </a>
           )}
           {icsLink && (
@@ -125,7 +125,7 @@ export default function InteractionModal({
               href={icsLink}
               className="text-sm bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
             >
-              Apple / Outlook
+              Apple / Outlook Manual Calendar Add
             </a>
           )}
           {onMarkComplete && (
