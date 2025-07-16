@@ -15,6 +15,7 @@ interface InteractionModalProps {
   profile_link?: string;
   onClose: () => void;
   calendarLink?: string;
+  outlookLink?: string;
   icsLink?: string;
   onMarkComplete?: () => void;
 }
@@ -34,6 +35,7 @@ export default function InteractionModal({
   profile_link,
   onClose,
   calendarLink,
+  outlookLink,
   icsLink,
   onMarkComplete,
 }: InteractionModalProps) {
@@ -106,6 +108,16 @@ export default function InteractionModal({
               className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
             >
               Add to Google Calendar
+            </a>
+          )}
+                    {outlookLink && (
+            <a
+              href={outlookLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            >
+              Outlook.com
             </a>
           )}
           {icsLink && (

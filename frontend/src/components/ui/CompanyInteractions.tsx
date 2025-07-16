@@ -6,7 +6,7 @@ import InteractionForm from "@/components/ui/InteractionsForm";
 import InteractionModal from "@/components/ui/InteractionModal";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { usePagination } from "@/hooks/usePreferences";
-import { generateGoogleCalendarUrl } from "@/lib/calendarUtils";
+import { generateGoogleCalendarUrl, generateOutlookComUrl } from "@/lib/calendarUtils";
 
 const USE_ACCOUNT_LABELS = true;
 
@@ -389,6 +389,7 @@ export default function EntityInteractions({
                 ? generateGoogleCalendarUrl(selectedInteraction)
                 : undefined
             }
+            outlookLink={selectedInteraction.follow_up ? generateOutlookComUrl(selectedInteraction) : undefined}
             icsLink={`${import.meta.env.VITE_API_BASE_URL}/interactions/${selectedInteraction.id}/calendar.ics`}
           />
         )}
