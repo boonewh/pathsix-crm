@@ -4,6 +4,7 @@ import EntityCard from "@/components/ui/EntityCard";
 import { Project } from "@/types";
 import ProjectForm from "@/components/ui/ProjectForm";
 import { FormWrapper } from "@/components/ui/FormWrapper";
+import PaginationControls from "@/components/ui/PaginationControls";
 import { apiFetch } from "@/lib/api";
 import { Link } from "react-router-dom";
 import { usePagination } from "@/hooks/usePreferences";
@@ -310,7 +311,10 @@ export default function Projects() {
                 items={projects}
                 statusField="project_status"
                 statusOptions={PROJECT_STATUS_OPTIONS}
+                totalCount={total}
+                showTotalForAll
               />
+
             </div>
           </div>
 
@@ -367,9 +371,24 @@ export default function Projects() {
 
       {/* Results Summary */}
       <div className="mb-4 text-sm text-gray-600">
-        <span className="font-medium">{sortedProjects.length}</span> of {projects.length} projects
+        <span className="font-medium">{projects.length}</span> of {total} projects
         {statusFilter !== 'all' && <span className="text-blue-600"> • {statusFilter}</span>}
       </div>
+
+      {total > perPage && (
+        <PaginationControls
+          currentPage={currentPage}
+          perPage={perPage}
+          total={total}
+          sortOrder={sortOrder}
+          onPageChange={setCurrentPage}
+          onPerPageChange={updatePerPage}
+          onSortOrderChange={updateSortOrder}
+          entityName="projects"
+          className="border-b pb-4 mb-4"
+        />
+      )}
+
 
       {/* Content */}
       {loading ? (
@@ -522,39 +541,18 @@ export default function Projects() {
         </div>
       )}
 
-      {/* Only show pagination at bottom when there are multiple pages */}
-      {filteredProjects.length > perPage && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Simple pagination info */}
-            <span className="text-sm text-gray-600">
-              Showing {((currentPage - 1) * perPage) + 1}-{Math.min(currentPage * perPage, filteredProjects.length)} of {filteredProjects.length}
-            </span>
-
-            {/* Page navigation */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Previous
-              </button>
-
-              <span className="text-sm text-gray-600 px-2">
-                Page {currentPage} of {Math.ceil(filteredProjects.length / perPage)}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage(Math.min(currentPage + 1, Math.ceil(filteredProjects.length / perPage)))}
-                disabled={currentPage === Math.ceil(filteredProjects.length / perPage)}
-                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+      {total > perPage && (
+        <PaginationControls
+          currentPage={currentPage}
+          perPage={perPage}
+          total={total}
+          sortOrder={sortOrder}
+          onPageChange={setCurrentPage}
+          onPerPageChange={updatePerPage}
+          onSortOrderChange={updateSortOrder}
+          entityName="projects"
+          className="mt-6 pt-4 border-t border-gray-200"
+        />
       )}
 
       {showEditModal && (

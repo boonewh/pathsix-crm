@@ -4,6 +4,7 @@ import { useAuth, userHasRole } from "@/authContext";
 import { Mail, Phone, MapPin, User, StickyNote, Wrench, LayoutGrid, List, Plus, Filter, ChevronDown, ChevronUp, Edit, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CompanyForm from "@/components/ui/CompanyForm";
+import PaginationControls from "@/components/ui/PaginationControls";
 import { Client } from "@/types";
 import { apiFetch } from "@/lib/api";
 import { usePagination } from "@/hooks/usePreferences";
@@ -494,6 +495,8 @@ export default function Clients() {
                 items={clients}
                 statusField="type"
                 statusOptions={ACCOUNT_TYPE_OPTIONS}
+                totalCount={total}
+                showTotalForAll
               />
             </div>
           </div>
@@ -551,9 +554,24 @@ export default function Clients() {
 
       {/* Results Summary */}
       <div className="mb-4 text-sm text-gray-600">
-        <span className="font-medium">{sortedClients.length}</span> of {clients.length} {USE_ACCOUNT_LABELS ? 'accounts' : 'clients'}
+        <span className="font-medium">{clients.length}</span> of {total} ...
         {typeFilter !== 'all' && <span className="text-blue-600"> • {typeFilter}</span>}
       </div>
+
+      {total > perPage && (
+        <PaginationControls
+          currentPage={currentPage}
+          perPage={perPage}
+          total={total}
+          sortOrder={sortOrder}
+          onPageChange={setCurrentPage}
+          onPerPageChange={updatePerPage}
+          onSortOrderChange={updateSortOrder}
+          entityName="clients"
+          className="border-b pb-4 mb-4"
+        />
+      )}
+
 
       {/* Content */}
       {loading ? (
@@ -734,39 +752,18 @@ export default function Clients() {
         </div>
       )}
 
-      {/* Only show pagination at bottom when there are multiple pages */}
-      {filteredClients.length > perPage && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Simple pagination info */}
-            <span className="text-sm text-gray-600">
-              Showing {((currentPage - 1) * perPage) + 1}-{Math.min(currentPage * perPage, filteredClients.length)} of {filteredClients.length}
-            </span>
-
-            {/* Page navigation */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Previous
-              </button>
-
-              <span className="text-sm text-gray-600 px-2">
-                Page {currentPage} of {Math.ceil(filteredClients.length / perPage)}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage(Math.min(currentPage + 1, Math.ceil(filteredClients.length / perPage)))}
-                disabled={currentPage === Math.ceil(filteredClients.length / perPage)}
-                className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+      {total > perPage && (
+        <PaginationControls
+          currentPage={currentPage}
+          perPage={perPage}
+          total={total}
+          sortOrder={sortOrder}
+          onPageChange={setCurrentPage}
+          onPerPageChange={updatePerPage}
+          onSortOrderChange={updateSortOrder}
+          entityName="clients"
+          className="mt-6 pt-4 border-t border-gray-200"
+        />
       )}
 
       {/* Assignment Modal */}

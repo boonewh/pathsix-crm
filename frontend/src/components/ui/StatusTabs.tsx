@@ -5,6 +5,8 @@ interface StatusTabsProps {
   statusField: string;
   statusOptions: readonly string[];
   className?: string;
+  totalCount?: number;
+  showTotalForAll?: boolean;
 }
 
 export default function StatusTabs({ 
@@ -13,10 +15,14 @@ export default function StatusTabs({
   items,
   statusField,
   statusOptions,
-  className = ""
+  className = "",
+  totalCount,
+  showTotalForAll
 }: StatusTabsProps) {
   const getCounts = () => {
-    const counts: Record<string, number> = { all: items.length };
+    const counts: Record<string, number> = {
+      all: showTotalForAll && totalCount !== undefined ? totalCount : items.length
+    };
     
     statusOptions.forEach(status => {
       counts[status] = items.filter(item => item[statusField] === status).length;

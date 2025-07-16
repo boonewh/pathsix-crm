@@ -354,6 +354,7 @@ async def list_all_projects():
         )
 
         if user_email:
+            subquery_user_id = session.query(User.id).filter(User.email == user_email).scalar_subquery()
             query = query.filter(
                 or_(
                     # Client projects
@@ -371,6 +372,12 @@ async def list_all_projects():
                             Project.lead.has(Lead.assigned_user.has(User.email == user_email)),
                             Project.lead.has(Lead.created_by_user.has(User.email == user_email))
                         )
+                    ),
+                    # ✅ Unattached projects created by this user
+                    and_(
+                        Project.client_id == None,
+                        Project.lead_id == None,
+                        Project.created_by == subquery_user_id
                     )
                 )
             )
