@@ -99,7 +99,7 @@ export default function InteractionModal({
           )}
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-end gap-2">
+        <div className="mt-6 flex flex-wrap justify-start gap-2">
           {calendarLink && (
             <a
               href={calendarLink}
