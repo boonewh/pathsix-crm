@@ -7,6 +7,7 @@ from app.models import Lead, User
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
 from app.utils.phone_utils import clean_phone_number
+from app.utils.email_utils import send_email
 from app.constants import TYPE_OPTIONS, LEAD_STATUS_OPTIONS, PHONE_LABELS
 
 imports_bp = Blueprint("imports", __name__, url_prefix="/api/import")
@@ -69,6 +70,7 @@ async def submit_leads():
     user = request.user
     form = await request.form
     files = await request.files
+    successful_leads = []
 
     if 'file' not in files:
         return jsonify({"error": "No file uploaded"}), 400
@@ -152,6 +154,7 @@ async def submit_leads():
                     created_at=datetime.utcnow(),
                     **lead_data
                 )
+                successful_leads.append(lead_data.copy())
                 session.add(lead)
                 session.flush()
                 successful += 1
@@ -166,6 +169,25 @@ async def submit_leads():
 
         if successful:
             session.commit()
+
+        if successful:
+            lead_list = [f"- {ld['name']}" for ld in successful_leads if 'name' in ld]
+            summary = "\n".join(lead_list[:10])  # limit preview to 10
+            more = f"\n...and {len(lead_list) - 10} more." if len(lead_list) > 10 else ""
+
+            body = (
+                f"You've been assigned {successful} new leads from a recent import by {user.email}.\n\n"
+                f"Sample of assigned leads:\n{summary}{more}\n\n"
+                "Please log in to the CRM to view all your leads."
+            )
+            try:
+                await send_email(
+                    subject="New Leads Assigned to You",
+                    recipient=assigned_user.email,
+                    body=body
+                )
+            except Exception as e:
+                print(f"Failed to send summary email: {e}")
 
         return jsonify({
             "message": f"Import complete: {successful} succeeded, {failed} failed.",

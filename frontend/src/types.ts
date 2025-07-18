@@ -106,4 +106,8 @@ export interface Project {
   primary_contact_email?: string;
   primary_contact_phone?: string;
   primary_contact_phone_label?: "work" | "mobile" | "home";
+  assigned_to?: {
+    id: number;
+    email: string;
+  } | null;
 }

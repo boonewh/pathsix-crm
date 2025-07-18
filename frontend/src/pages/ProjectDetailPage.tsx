@@ -15,6 +15,7 @@ import { Project, Interaction } from "@/types";
 import { apiFetch } from "@/lib/api";
 import CompanyNotes from "@/components/ui/CompanyNotes";
 import CompanyInteractions from "@/components/ui/CompanyInteractions";
+import { toast } from "react-hot-toast";
 
 // TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
 const USE_ACCOUNT_LABELS = true;
@@ -115,7 +116,7 @@ export default function ProjectDetailPage() {
       setProject((prev) => prev && { ...prev, notes: noteDraft });
       setIsEditingNote(false);
     } else {
-      alert("Failed to save notes");
+      toast.error("Failed to save notes");
     }
   };
 
@@ -130,7 +131,7 @@ export default function ProjectDetailPage() {
       setNoteDraft("");
       setIsEditingNote(false);
     } else {
-      alert("Failed to delete notes");
+      toast.error("Failed to delete notes");
     }
   };
 
@@ -192,13 +193,37 @@ export default function ProjectDetailPage() {
 
       window.location.href = `/clients/${newClient.id}`;
     } else {
-      alert("Failed to convert project to account.");
+      toast.error("Failed to convert project to account.");
     }
   };
 
   if (loadError) return <p className="p-6 text-red-600">{loadError}</p>;
   if (!id) return <p className="p-6 text-red-600">Invalid project ID.</p>;
   if (!project) return <p className="p-6">Loading...</p>;
+
+  const handleAssignProject = async () => {
+    if (!project || !selectedUserId) return;
+    setIsAssigning(true);
+    const res = await apiFetch(`/projects/${project.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ assigned_to: selectedUserId }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setProject((prev) => prev && { ...prev, assigned_to: updated.assigned_to });
+      setShowAssignModal(false);
+      setSelectedUserId(null);
+      toast.success("Project assigned");
+    } else {
+      toast.error("Failed to assign project");
+    }
+    setIsAssigning(false);
+  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -291,7 +316,7 @@ export default function ProjectDetailPage() {
                             setProject((prev) => prev && { ...prev, primary_contact_title: newTitle });
                             setEditingTitle(false);
                           } else {
-                            alert("Failed to update title.");
+                            toast.error("Failed to update title.");
                           }
                         }}
                       >
@@ -376,6 +401,12 @@ export default function ProjectDetailPage() {
         </>
       )}
 
+      {project.assigned_to?.email && (
+        <div className="text-sm text-gray-600">
+          <strong>Assigned to:</strong> {project.assigned_to.email}
+        </div>
+      )}
+
       <CompanyInteractions
         token={token!}
         entityType="project"
@@ -395,6 +426,44 @@ export default function ProjectDetailPage() {
         setNoteDraft={setNoteDraft}
       />
 
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Assign Project</h2>
+
+            <select
+              value={selectedUserId ?? ""}
+              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded mb-4"
+            >
+              <option value="">Select a user</option>
+              {availableUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.email}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!selectedUserId || isAssigning}
+                onClick={handleAssignProject}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                Assign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Action Buttons */}
       <div className="flex gap-4 pt-4 border-t">
         {!project.client_id && !project.lead_id && (
@@ -406,60 +475,15 @@ export default function ProjectDetailPage() {
           </button>
         )}
 
-        {/* Future: Project assignment for admins */}
         {userHasRole(user, "admin") && (
           <button
             onClick={() => setShowAssignModal(true)}
             className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
-            disabled
-            title="Project assignment coming soon"
           >
             Assign Project
           </button>
         )}
       </div>
-
-      {/* Future: Assignment Modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
-            <h2 className="text-lg font-semibold mb-4">Assign Project</h2>
-
-            <select
-              value={selectedUserId || ""}
-              onChange={(e) => setSelectedUserId(Number(e.target.value))}
-              className="w-full border rounded px-3 py-2 mb-4"
-            >
-              <option value="">Select a user</option>
-              {availableUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.email}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowAssignModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={!selectedUserId || isAssigning}
-                onClick={async () => {
-                  // Future implementation
-                  alert("Project assignment feature coming soon!");
-                  setShowAssignModal(false);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                {isAssigning ? "Assigning…" : "Assign"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

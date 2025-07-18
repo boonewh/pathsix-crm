@@ -3,7 +3,8 @@ from datetime import datetime
 from app.models import Project, ActivityLog, ActivityType, Client, Lead, User
 from app.database import SessionLocal
 from app.utils.auth_utils import requires_auth
-from app.utils.phone_utils import clean_phone_number  # NEW: Add phone utility
+from app.utils.phone_utils import clean_phone_number  
+from app.utils.email_utils import send_assignment_notification
 from app.constants import PROJECT_STATUS_OPTIONS, PHONE_LABELS
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_
@@ -234,9 +235,12 @@ async def update_project(project_id):
         if not project:
             return jsonify({"error": "Project not found"}), 404
 
+        # Capture current assigned_to
+        previous_assigned_to = project.assigned_to
+
         # Update basic fields
         for field in [
-            "project_name", "type", "project_description", "project_worth", "client_id", "lead_id", "notes"
+            "project_name", "type", "project_description", "project_worth", "client_id", "lead_id", "notes", "assigned_to"
         ]:
             if field in data:
                 if field == "project_worth":
@@ -268,6 +272,18 @@ async def update_project(project_id):
 
         session.commit()
         session.refresh(project)
+
+        if "assigned_to" in data and data["assigned_to"] and data["assigned_to"] != previous_assigned_to:
+            assigned_user = session.query(User).get(data["assigned_to"])
+            if assigned_user and assigned_user.email:
+                await send_assignment_notification(
+                    to_email=assigned_user.email,
+                    entity_type="project",
+                    entity_name=project.project_name,
+                    assigned_by=user.email
+                )
+
+
         return jsonify({
             "id": project.id,
             "project_name": project.project_name,
@@ -278,6 +294,7 @@ async def update_project(project_id):
         })
     finally:
         session.close()
+
 
 @projects_bp.route("/<int:project_id>", methods=["DELETE"])
 @requires_auth()

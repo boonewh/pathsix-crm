@@ -8,7 +8,7 @@ function splitDateTime(datetime?: string): { date: string; time: string } {
 }
 
 function combineDateTime(date: string, time: string): string {
-  return `${date}T${time || "00:00"}`;
+  return `${date}T${time || "08:00"}`;
 }
 
 export default function InteractionForm(props: InteractionFormProps) {
