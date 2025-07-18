@@ -225,7 +225,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
         </div>
 
         {!form.client_id && !form.lead_id && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 pb-20">
             <div className="flex items-center gap-2">
               <span className="text-yellow-600">⚠️</span>
               <p className="text-sm text-yellow-800">
@@ -238,7 +238,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
       </div>
 
       {/* Sticky Save/Cancel Footer */}
-      <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end gap-2 z-10">
+      <div className="sticky bottom-0 bg-white pt-4 border-t flex justify-end gap-2 z-10 px-4 pb-4">
         <button
           onClick={onCancel}
           className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"

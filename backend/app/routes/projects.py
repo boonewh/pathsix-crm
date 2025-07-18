@@ -236,7 +236,7 @@ async def update_project(project_id):
             return jsonify({"error": "Project not found"}), 404
 
         # Capture current assigned_to
-        previous_assigned_to = project.assigned_to
+        previous_assigned_to = getattr(project, "assigned_to", None)
 
         # Update basic fields
         for field in [

@@ -3,7 +3,7 @@ import { useAuth } from "@/authContext";
 import EntityCard from "@/components/ui/EntityCard";
 import { Project } from "@/types";
 import ProjectForm from "@/components/ui/ProjectForm";
-import { FormWrapper } from "@/components/ui/FormWrapper";
+import ProjectEditModal from "@/components/ui/ProjectEditModal";
 import PaginationControls from "@/components/ui/PaginationControls";
 import { apiFetch } from "@/lib/api";
 import { Link } from "react-router-dom";
@@ -67,7 +67,6 @@ export default function Projects() {
     sortField,
     sortDirection,
     handleSort,
-    getSortIcon,
     sortData,
     cardSortOptions,
     currentCardValue,
@@ -214,12 +213,14 @@ export default function Projects() {
   const handleEdit = (project: Project) => {
     setEditingId(project.id);
     setForm(project);
+    setShowEditModal(true); // ✅ show the modal
   };
 
   const handleCancel = () => {
-    setEditingId(null);
-    setCreating(false);
-    setForm({});
+    setShowEditModal(false);     
+    setEditingId(null);          
+    setCreating(false);       
+    setForm({});        
   };
 
   // Clear all filters
@@ -421,6 +422,22 @@ export default function Projects() {
             </div>
           )}
 
+          {showEditModal && editingId !== null && (
+            <ProjectEditModal
+              form={form}
+              setForm={setForm}
+              clients={clients}
+              leads={leads}
+              onSave={handleSave}
+              onCancel={handleCancel}
+              onClose={() => {
+                setShowEditModal(false);
+                setEditingId(null);
+                handleCancel();
+              }}
+            />
+          )}
+
           {viewMode === 'cards' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sortedProjects.map((project) => (
@@ -435,23 +452,8 @@ export default function Projects() {
                       </Link>
                     }
                     typeLabel={project.type || "None"}
-                    editing={editingId === project.id}
                     onEdit={() => handleEdit(project)}
-                    onCancel={handleCancel}
-                    onSave={handleSave}
                     onDelete={() => handleDelete(project.id)}
-                    editForm={
-                      <FormWrapper>
-                        <ProjectForm
-                          form={form}
-                          setForm={setForm}
-                          clients={clients}
-                          leads={leads}
-                          onSave={handleSave}
-                          onCancel={resetForm}
-                        />
-                      </FormWrapper>
-                    }
                     details={
                       <ul className="text-sm text-gray-700 space-y-1">
                         <li>
@@ -464,7 +466,6 @@ export default function Projects() {
                           </span>
                         </li>
                         {project.project_description && <li>{project.project_description}</li>}
-
                         {project.client_id && project.client_name && (
                           <li>
                             <Link to={`/clients/${project.client_id}`} className="text-blue-600 hover:underline">
@@ -472,7 +473,6 @@ export default function Projects() {
                             </Link>
                           </li>
                         )}
-
                         {project.lead_id && project.lead_name && (
                           <li>
                             <Link to={`/leads/${project.lead_id}`} className="text-blue-600 hover:underline">
@@ -480,17 +480,14 @@ export default function Projects() {
                             </Link>
                           </li>
                         )}
-
                         {!project.client_id && !project.lead_id && project.primary_contact_name && (
                           <li className="text-blue-600">
                             Contact: {project.primary_contact_name}
                           </li>
                         )}
-
                         {!project.client_id && !project.lead_id && !project.primary_contact_name && (
                           <li className="text-yellow-600 text-xs font-medium">⚠️ Unassigned Project</li>
                         )}
-
                         {project.project_worth && <li>Worth: ${project.project_worth.toLocaleString()}</li>}
                         {project.project_start && <li>Start: {new Date(project.project_start).toLocaleDateString()}</li>}
                         {project.project_end && <li>End: {new Date(project.project_end).toLocaleDateString()}</li>}
@@ -504,6 +501,7 @@ export default function Projects() {
                   />
                 </div>
               ))}
+
             </div>
           ) : (
             <ProjectsTable
@@ -555,42 +553,6 @@ export default function Projects() {
         />
       )}
 
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Edit Project</h2>
-                <button
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setEditingId(null);
-                    handleCancel();
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <ProjectForm
-                form={form}
-                setForm={setForm}
-                clients={clients}
-                leads={leads}
-                onSave={async () => {
-                  await handleSave();
-                  setShowEditModal(false);
-                }}
-                onCancel={() => {
-                  setShowEditModal(false);
-                  handleCancel();
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

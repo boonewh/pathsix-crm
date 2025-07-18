@@ -55,22 +55,6 @@ const EntityCard: FC<EntityCardProps> = ({
               )}
             </>
           )}
-          {editing && (
-            <div className="mt-4 flex gap-2 flex-shrink-0">
-              <button
-                onClick={onSave}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Save
-              </button>
-              <button
-                onClick={onCancel}
-                className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
         </div>
 
         {(onEdit || onDelete || extraMenuItems) && !editing && (
