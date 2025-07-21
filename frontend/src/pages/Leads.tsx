@@ -5,7 +5,7 @@ import { useAuth, userHasRole } from "@/authContext";
 import { Link } from "react-router-dom";
 import LeadForm from "@/components/ui/LeadForm";
 import { Lead } from "@/types";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchJson } from "@/lib/api";
 import { usePagination } from "@/hooks/usePreferences";
 import { useStatusFilter } from "@/hooks/useStatusFilter";
 import { useSorting, legacySortToUnified, unifiedToLegacySort } from "@/hooks/useSorting";
@@ -138,7 +138,7 @@ export default function Leads() {
         const data = await res.json();
         setLeads(data.leads);
         setTotal(data.total);
-        setError(""); // Reset error on successful fetch
+        setError("");
       } catch (err) {
         setError("Failed to load leads");
       } finally {
@@ -149,13 +149,15 @@ export default function Leads() {
     fetchLeads();
 
     if (userHasRole(user, "admin")) {
-      fetch("/api/users/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)));
+      apiFetchJson("/users/")
+        .then((data) => setAvailableUsers(data.filter((u: any) => u.is_active)))
+        .catch((err) => {
+          console.error("Failed to load users:", err);
+          setAvailableUsers([]);
+        });
     }
   }, [token, user, currentPage, perPage, sortOrder]);
+
 
   // Advanced filtering logic
   const filteredLeads = leads.filter(lead => {
