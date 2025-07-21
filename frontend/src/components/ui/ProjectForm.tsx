@@ -3,6 +3,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Project } from "@/types";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 
 // TEMP: All Seasons Foam prefers "Accounts" instead of "Clients"
 const USE_ACCOUNT_LABELS = true;
@@ -16,7 +18,17 @@ interface ProjectFormProps {
   onCancel: () => void;
 }
 
+type ContactOption = {
+  id: number;
+  name: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  phone_label?: "work" | "mobile" | "home";
+};
+
 export default function ProjectForm({ form, setForm, clients, leads, onSave, onCancel }: ProjectFormProps) {
+  const [contactOptions, setContactOptions] = useState<ContactOption[]>([]);
   return (
     <div className="relative">
       <div className="space-y-4 pb-28">
@@ -72,10 +84,50 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
             <select
               id="client_id"
               value={form.client_id || ""}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const clientId = e.target.value ? parseInt(e.target.value) : undefined;
                 setForm({ ...form, client_id: clientId, lead_id: undefined });
+
+                if (clientId) {
+                  const res = await apiFetch(`/clients/${clientId}`);
+                  const data = await res.json();
+
+                  // Set form with primary contact info
+                  setForm((prev) => ({
+                    ...prev,
+                    primary_contact_name: data.contact_person || "",
+                    primary_contact_title: data.contact_title || "",
+                    primary_contact_email: data.email || "",
+                    primary_contact_phone: data.phone || "",
+                    primary_contact_phone_label: data.phone_label || "work",
+                  }));
+
+                  // Add both primary and additional contacts to the dropdown
+                  const primary: ContactOption = {
+                    id: 0,
+                    name: data.contact_person || "Primary Contact",
+                    title: data.contact_title || "",
+                    email: data.email || "",
+                    phone: data.phone || "",
+                    phone_label: data.phone_label || "work",
+                  };
+
+                  const extras = (data.contacts || []).map((c: any) => ({
+                    id: c.id,
+                    name: c.name,
+                    title: c.title,
+                    email: c.email,
+                    phone: c.phone,
+                    phone_label: c.phone_label,
+                  }));
+
+                  setContactOptions([primary, ...extras]);
+                } else {
+                  // If client deselected, clear contacts
+                  setContactOptions([]);
+                }
               }}
+
               className="border border-input bg-background text-sm rounded-md px-2 py-1"
             >
               <option value="">-- No {USE_ACCOUNT_LABELS ? "Account" : "Client"} --</option>
@@ -92,10 +144,48 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
             <select
               id="lead_id"
               value={form.lead_id || ""}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const leadId = e.target.value ? parseInt(e.target.value) : undefined;
                 setForm({ ...form, lead_id: leadId, client_id: undefined });
+
+                if (leadId) {
+                  const res = await apiFetch(`/leads/${leadId}`);
+                  const data = await res.json();
+
+                  setForm((prev) => ({
+                    ...prev,
+                    primary_contact_name: data.contact_person || "",
+                    primary_contact_title: data.contact_title || "",
+                    primary_contact_email: data.email || "",
+                    primary_contact_phone: data.phone || "",
+                    primary_contact_phone_label: data.phone_label || "work",
+                  }));
+
+                  const primary: ContactOption = {
+                    id: 0,
+                    name: data.contact_person || "Primary Contact",
+                    title: data.contact_title || "",
+                    email: data.email || "",
+                    phone: data.phone || "",
+                    phone_label: data.phone_label || "work",
+                  };
+
+                  const extras = (data.contacts || []).map((c: any) => ({
+                    id: c.id,
+                    name: c.name,
+                    title: c.title,
+                    email: c.email,
+                    phone: c.phone,
+                    phone_label: c.phone_label,
+                  }));
+
+                  setContactOptions([primary, ...extras]);
+                } else {
+                  setContactOptions([]);
+                }
               }}
+
+
               className="border border-input bg-background text-sm rounded-md px-2 py-1"
             >
               <option value="">-- No Lead --</option>
@@ -110,12 +200,41 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
 
         {/* Primary Contact */}
         <div className="border-t pt-4">
+          {contactOptions.length > 0 && (
+            <div className="grid gap-2 mt-4 mb-4">
+              <Label htmlFor="contact_picker" className="text-lg font-medium">Choose a contact.</Label>
+              <select
+                id="contact_picker"
+                onChange={(e) => {
+                  const selected = contactOptions.find(c => c.id === parseInt(e.target.value));
+                  if (selected) {
+                    setForm((prev) => ({
+                      ...prev,
+                      primary_contact_name: selected.name || "",
+                      primary_contact_title: selected.title || "",
+                      primary_contact_email: selected.email || "",
+                      primary_contact_phone: selected.phone || "",
+                      primary_contact_phone_label: (selected.phone_label as "work" | "mobile" | "home") || "work",
+                    }));
+                  }
+                }}
+                className="border border-input bg-background text-sm rounded-md px-2 py-1"
+              >
+                <option value="">-- Select a contact --</option>
+                {contactOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.title ? `(${c.title})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Primary Contact</h3>
           <p className="text-sm text-gray-600 mb-4">
             For standalone projects, add contact information. This will be used for interactions and follow-ups.
           </p>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 mb-4">
             <Label htmlFor="primary_contact_name">Contact Name</Label>
             <Input
               id="primary_contact_name"
@@ -125,7 +244,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 mb-4">
             <Label htmlFor="primary_contact_title">Contact Title</Label>
             <Input
               id="primary_contact_title"
@@ -135,7 +254,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 mb-4">
             <Label htmlFor="primary_contact_email">Contact Email</Label>
             <Input
               id="primary_contact_email"
@@ -146,7 +265,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2 mb-4">
             <Label htmlFor="primary_contact_phone">Contact Phone</Label>
             <div className="flex gap-2">
               <PhoneInput
@@ -164,12 +283,13 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
                 <option value="mobile">Mobile</option>
                 <option value="home">Home</option>
               </select>
+
             </div>
           </div>
         </div>
 
         {/* Project Details */}
-        <div className="grid gap-2">
+        <div className="grid gap-2 mb-4">
           <Label htmlFor="project_description">Description</Label>
           <Textarea
             id="project_description"
@@ -179,7 +299,7 @@ export default function ProjectForm({ form, setForm, clients, leads, onSave, onC
           />
         </div>
 
-        <div className="grid gap-2">
+        <div className="grid gap-2 mb-4">
           <Label htmlFor="project_worth">Project Worth ($)</Label>
           <Input
             id="project_worth"

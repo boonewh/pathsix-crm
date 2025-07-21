@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 // Phone utility functions (you can also import these from phoneUtils.ts if you prefer)
 function formatPhoneNumber(phone: string): string {
@@ -72,7 +72,11 @@ export default function PhoneInput({
   ...props 
 }: PhoneInputProps) {
   const [displayValue, setDisplayValue] = useState(formatPhoneNumber(value || ''));
-  
+
+  useEffect(() => {
+    setDisplayValue(formatPhoneNumber(value || ""));
+  }, [value]);
+    
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const formatted = formatPhoneInput(inputValue);

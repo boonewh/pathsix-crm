@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   Mail,
   Phone,
@@ -354,7 +354,12 @@ export default function LeadDetailPage() {
           )}
 
           {projects.length === 0 && !projectLoadError ? (
-            <p className="text-sm text-gray-500">No projects found for this lead.</p>
+                          <p className="text-sm text-gray-500">
+                No projects found for this lead. Create new projects on the{" "}
+                <Link to="/projects" className="text-blue-600 hover:underline">
+                  Projects page
+                </Link>.
+              </p>
           ) : (
             <ul className="space-y-2 text-sm text-gray-800">
               {projects.map((p) => (

@@ -234,8 +234,10 @@ async def get_client(client_id):
             "zip": client.zip,
             "notes": client.notes,
             "type": client.type,
-            "created_at": client.created_at.isoformat() + "Z"
+            "created_at": client.created_at.isoformat() + "Z",
+            "contacts": [c.to_dict() for c in client.contacts] if client.contacts else []
         })
+
         response.headers["Cache-Control"] = "no-store"
         return response
     finally:

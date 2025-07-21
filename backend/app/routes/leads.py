@@ -188,7 +188,8 @@ async def get_lead(lead_id):
             "created_at": lead.created_at.isoformat() + "Z",
             "lead_status": lead.lead_status,
             "converted_on": lead.converted_on.isoformat() + "Z" if lead.converted_on else None,
-            "type": lead.type
+            "type": lead.type,
+            "contacts": [c.to_dict() for c in lead.contacts] if lead.contacts else []
         })
         response.headers["Cache-Control"] = "no-store"
         return response

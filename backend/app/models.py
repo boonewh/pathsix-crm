@@ -158,6 +158,16 @@ class Contact(Base):
     client = relationship("Client", backref="contacts")
     lead = relationship("Lead", backref="contacts")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": f"{self.first_name} {self.last_name}".strip(),
+            "title": self.title,
+            "email": self.email,
+            "phone": self.phone,
+            "phone_label": self.phone_label,
+        }
+
     def __repr__(self):
         return f"<Contact {self.first_name} {self.last_name}>"
 
