@@ -196,6 +196,8 @@ class Project(Base):
     created_by = Column(Integer, ForeignKey('users.id'), nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
     last_updated_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
+    deleted_by = Column(Integer, ForeignKey('users.id'), nullable=True)
 
     # ✅ Relationships to access names in API
     client = relationship("Client", backref="projects")

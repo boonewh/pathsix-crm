@@ -534,3 +534,82 @@ async def list_assigned_clients():
         ])
     finally:
         session.close()
+
+
+@clients_bp.route("/trash", methods=["GET"])
+@requires_auth()
+async def list_trashed_clients():
+    user = request.user
+    session = SessionLocal()
+    try:
+        if not any(role.name == "admin" for role in user.roles):
+            trashed = session.query(Client).filter(
+                Client.tenant_id == user.tenant_id,
+                Client.deleted_at != None,
+                or_(
+                    Client.created_by == user.id,
+                    Client.assigned_to == user.id
+                )
+            ).order_by(Client.deleted_at.desc()).all()
+        else:
+            trashed = session.query(Client).filter(
+                Client.tenant_id == user.tenant_id,
+                Client.deleted_at != None
+            ).order_by(Client.deleted_at.desc()).all()
+
+        return jsonify([
+            {
+                "id": c.id,
+                "name": c.name,
+                "deleted_at": c.deleted_at.isoformat() + "Z",
+                "deleted_by": c.deleted_by
+            } for c in trashed
+        ])
+    finally:
+        session.close()
+
+
+
+@clients_bp.route("/<int:client_id>/restore", methods=["PUT"])
+@requires_auth(roles=[])
+async def restore_client(client_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        client = session.query(Client).filter(
+            Client.id == client_id,
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at != None
+        ).first()
+
+        if not client:
+            return jsonify({"error": "Client not found or not deleted"}), 404
+
+        client.deleted_at = None
+        client.deleted_by = None
+        session.commit()
+        return jsonify({"message": "Client restored successfully"})
+    finally:
+        session.close()
+
+
+@clients_bp.route("/<int:client_id>/purge", methods=["DELETE"])
+@requires_auth(roles=["admin"])
+async def purge_client(client_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        client = session.query(Client).filter(
+            Client.id == client_id,
+            Client.tenant_id == user.tenant_id,
+            Client.deleted_at != None
+        ).first()
+
+        if not client:
+            return jsonify({"error": "Client not found or not eligible for purge"}), 404
+
+        session.delete(client)
+        session.commit()
+        return jsonify({"message": "Client permanently deleted"}), 200
+    finally:
+        session.close()

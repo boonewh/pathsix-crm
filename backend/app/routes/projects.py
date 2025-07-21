@@ -296,27 +296,6 @@ async def update_project(project_id):
         session.close()
 
 
-@projects_bp.route("/<int:project_id>", methods=["DELETE"])
-@requires_auth()
-async def delete_project(project_id):
-    user = request.user
-    session = SessionLocal()
-    try:
-        project = session.query(Project).filter(
-            Project.id == project_id,
-            Project.tenant_id == user.tenant_id
-        ).first()
-
-        if not project:
-            return jsonify({"error": "Project not found"}), 404
-
-        session.delete(project)
-        session.commit()
-        return jsonify({"message": "Project deleted"})
-    finally:
-        session.close()
-
-# NEW: Add project interactions endpoint
 @projects_bp.route("/<int:project_id>/interactions", methods=["GET"])
 @requires_auth()
 async def get_project_interactions(project_id):
@@ -553,5 +532,109 @@ async def list_projects_by_lead(lead_id):
                 "primary_contact_phone_label": p.primary_contact_phone_label
             } for p in projects
         ])
+    finally:
+        session.close()
+
+
+@projects_bp.route("/<int:project_id>", methods=["DELETE"])
+@requires_auth()
+async def delete_project(project_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        project = session.query(Project).filter(
+            Project.id == project_id,
+            Project.tenant_id == user.tenant_id,
+            Project.deleted_at == None  # Only allow deleting active items
+        ).first()
+
+        if not project:
+            return jsonify({"error": "Project not found"}), 404
+
+        project.deleted_at = datetime.utcnow()
+        project.deleted_by = user.id
+
+        session.commit()
+        return jsonify({"message": "Project soft-deleted successfully"})
+    finally:
+        session.close()
+
+
+@projects_bp.route("/trash", methods=["GET"])
+@requires_auth()
+async def list_trashed_projects():
+    user = request.user
+    session = SessionLocal()
+    try:
+        if not any(role.name == "admin" for role in user.roles):
+            trashed = session.query(Project).filter(
+                Project.tenant_id == user.tenant_id,
+                Project.deleted_at != None,
+                Project.created_by == user.id  # Only show user's own
+            ).order_by(Project.deleted_at.desc()).all()
+        else:
+            trashed = session.query(Project).filter(
+                Project.tenant_id == user.tenant_id,
+                Project.deleted_at != None
+            ).order_by(Project.deleted_at.desc()).all()
+
+        return jsonify([
+            {
+                "id": p.id,
+                "name": p.project_name,
+                "deleted_at": p.deleted_at.isoformat() + "Z",
+                "deleted_by": p.deleted_by
+            } for p in trashed
+        ])
+    finally:
+        session.close()
+
+
+@projects_bp.route("/<int:project_id>/restore", methods=["PUT"])
+@requires_auth()
+async def restore_project(project_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        query = session.query(Project).filter(
+            Project.id == project_id,
+            Project.tenant_id == user.tenant_id,
+            Project.deleted_at != None
+        )
+
+        # Non-admins can only restore their own deleted items
+        if not any(role.name == "admin" for role in user.roles):
+            query = query.filter(Project.created_by == user.id)
+
+        project = query.first()
+        if not project:
+            return jsonify({"error": "Project not found or not authorized to restore"}), 404
+
+        project.deleted_at = None
+        project.deleted_by = None
+        session.commit()
+        return jsonify({"message": "Project restored successfully"}), 200
+    finally:
+        session.close()
+
+
+@projects_bp.route("/<int:project_id>/purge", methods=["DELETE"])
+@requires_auth(roles=["admin"])
+async def purge_project(project_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        project = session.query(Project).filter(
+            Project.id == project_id,
+            Project.tenant_id == user.tenant_id,
+            Project.deleted_at != None
+        ).first()
+
+        if not project:
+            return jsonify({"error": "Project not found or not eligible for purge"}), 404
+
+        session.delete(project)
+        session.commit()
+        return jsonify({"message": "Project permanently deleted"}), 200
     finally:
         session.close()

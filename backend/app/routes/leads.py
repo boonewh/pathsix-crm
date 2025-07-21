@@ -500,3 +500,87 @@ async def bulk_delete_leads():
         return jsonify({"message": f"{updated_count} lead(s) deleted"})
     finally:
         session.close()
+
+@leads_bp.route("/trash", methods=["GET"])
+@requires_auth()
+async def list_trashed_leads():
+    user = request.user
+    session = SessionLocal()
+    try:
+        if not any(role.name == "admin" for role in user.roles):
+            trashed = session.query(Lead).filter(
+                Lead.tenant_id == user.tenant_id,
+                Lead.deleted_at != None,
+                or_(
+                    Lead.created_by == user.id,
+                    Lead.assigned_to == user.id
+                )
+            ).order_by(Lead.deleted_at.desc()).all()
+        else:
+            trashed = session.query(Lead).filter(
+                Lead.tenant_id == user.tenant_id,
+                Lead.deleted_at != None
+            ).order_by(Lead.deleted_at.desc()).all()
+
+        return jsonify([
+            {
+                "id": l.id,
+                "name": l.name,
+                "deleted_at": l.deleted_at.isoformat() + "Z",
+                "deleted_by": l.deleted_by
+            } for l in trashed
+        ])
+    finally:
+        session.close()
+
+
+@leads_bp.route("/<int:lead_id>/restore", methods=["PUT"])
+@requires_auth()
+async def restore_lead(lead_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        lead = session.query(Lead).filter(
+            Lead.id == lead_id,
+            Lead.tenant_id == user.tenant_id,
+            Lead.deleted_at != None,
+            or_(
+                Lead.created_by == user.id,
+                Lead.assigned_to == user.id,
+                # Optional: allow admin to restore any
+                User.id == user.id if any(role.name == "admin" for role in user.roles) else False
+            )
+        ).first()
+
+        if not lead:
+            return jsonify({"error": "Lead not found or not authorized to restore"}), 404
+
+        lead.deleted_at = None
+        lead.deleted_by = None
+        session.commit()
+        return jsonify({"message": "Lead restored successfully"})
+    finally:
+        session.close()
+
+
+@leads_bp.route("/<int:lead_id>/purge", methods=["DELETE"])
+@requires_auth(roles=["admin"])
+async def purge_lead(lead_id):
+    user = request.user
+    session = SessionLocal()
+    try:
+        lead = session.query(Lead).filter(
+            Lead.id == lead_id,
+            Lead.tenant_id == user.tenant_id,
+            Lead.deleted_at != None
+        ).first()
+
+        if not lead:
+            return jsonify({"error": "Lead not found or not eligible for purge"}), 404
+
+        session.delete(lead)
+        session.commit()
+        return jsonify({"message": "Lead permanently deleted"}), 200
+    finally:
+        session.close()
+

@@ -554,7 +554,7 @@ export default function Clients() {
 
       {/* Results Summary */}
       <div className="mb-4 text-sm text-gray-600">
-        <span className="font-medium">{clients.length}</span> of {total} ...
+        <span className="font-medium">{clients.length}</span> of {total} accounts
         {typeFilter !== 'all' && <span className="text-blue-600"> • {typeFilter}</span>}
       </div>
 
