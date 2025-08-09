@@ -45,9 +45,13 @@ export default function AdminLeadsPage() {
     );
   };
 
+  const toggleAllLeads = () => {
+    setSelectedLeadIds(prev =>
+      prev.length === leads.length ? [] : leads.map(l => l.id)
+    );
+  };
+
   const clearSelection = () => setSelectedLeadIds([]);
-
-
 
   const selectedEmail = searchParams.get("user") || "";
 
@@ -207,7 +211,12 @@ export default function AdminLeadsPage() {
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-4 py-2 text-left">
-                      <span className="sr-only">Select</span>
+                      <input
+                        type="checkbox"
+                        aria-label="Select all leads"
+                        checked={leads.length > 0 && selectedLeadIds.length === leads.length}
+                        onChange={toggleAllLeads}
+                      />
                     </th>
                     <th className="px-4 py-2 text-left">Name</th>
                     <th className="px-4 py-2 text-left">Contact</th>

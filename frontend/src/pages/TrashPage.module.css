@@ -1,0 +1,21 @@
+.trash-table th,
+.trash-table td {
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+.trash-table th.w-10,
+.trash-table td.w-10 {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+}
+.trash-table th,
+.trash-table td {
+  width: auto;
+}
+.trash-table th:last-child,
+.trash-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}

@@ -638,3 +638,30 @@ async def purge_project(project_id):
         return jsonify({"message": "Project permanently deleted"}), 200
     finally:
         session.close()
+
+
+@projects_bp.route("/bulk-delete", methods=["POST"])
+@requires_auth(roles=["admin"])
+async def bulk_delete_projects():
+    user = request.user
+    data = await request.get_json()
+    project_ids = data.get("project_ids", [])
+
+    if not project_ids or not isinstance(project_ids, list):
+        return jsonify({"error": "No project IDs provided"}), 400
+
+    session = SessionLocal()
+    try:
+        updated_count = session.query(Project).filter(
+            Project.tenant_id == user.tenant_id,
+            Project.id.in_(project_ids),
+            Project.deleted_at == None
+        ).update(
+            {Project.deleted_at: datetime.utcnow(), Project.deleted_by: user.id},
+            synchronize_session=False
+        )
+        session.commit()
+        return jsonify({"message": f"{updated_count} project(s) deleted"})
+    finally:
+        session.close()
+

@@ -613,3 +613,30 @@ async def purge_client(client_id):
         return jsonify({"message": "Client permanently deleted"}), 200
     finally:
         session.close()
+
+
+@clients_bp.route("/bulk-delete", methods=["POST"])
+@requires_auth(roles=["admin"])
+async def bulk_delete_clients():
+    user = request.user
+    data = await request.get_json()
+    client_ids = data.get("client_ids", [])
+
+    if not client_ids or not isinstance(client_ids, list):
+        return jsonify({"error": "No client IDs provided"}), 400
+
+    session = SessionLocal()
+    try:
+        updated_count = session.query(Client).filter(
+            Client.tenant_id == user.tenant_id,
+            Client.id.in_(client_ids),
+            Client.deleted_at == None
+        ).update(
+            {Client.deleted_at: datetime.utcnow(), Client.deleted_by: user.id},
+            synchronize_session=False
+        )
+        session.commit()
+        return jsonify({"message": f"{updated_count} client(s) deleted"})
+    finally:
+        session.close()
+
