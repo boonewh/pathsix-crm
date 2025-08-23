@@ -13,6 +13,7 @@ from app.routes.utils import utils_bp
 from app.routes.contacts import contacts_bp
 from app.routes.imports import imports_bp
 from app.routes.user_preferences import preferences_bp
+from app.routes.storage import storage_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
@@ -29,3 +30,4 @@ def register_blueprints(app):
     app.register_blueprint(contacts_bp)
     app.register_blueprint(imports_bp)
     app.register_blueprint(preferences_bp)
+    app.register_blueprint(storage_bp)

@@ -1,6 +1,5 @@
 from quart import Quart
 from quart_cors import cors
-from .config import SECRET_KEY
 from app.routes import register_blueprints
 from app.utils.keep_alive import keep_db_alive  # ✅ this still works
 from app.database import SessionLocal
@@ -32,10 +31,15 @@ def create_app():
         app,
         allow_origin=["https://pathsix-crm.vercel.app", "https://test-crm-six.vercel.app", "http://localhost:5173"],
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],          # ← add this
+        expose_headers=["Content-Disposition"]
     )
 
     app.config.from_pyfile("config.py")
+    app.config.setdefault("STORAGE_ROOT", "./storage")
+    app.config.setdefault("MAX_CONTENT_LENGTH", 20 * 1024 * 1024)  # 20 MB
+    app.config.setdefault("STORAGE_PROVIDER", "disk")  # "disk" | "b2"
     register_blueprints(app)
 
     #✅ Before serving: warm up DB, then start keep-alive

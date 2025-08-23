@@ -85,6 +85,7 @@ export default function AdminUsersPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Existing promote/demote behavior (replace with a single role)
   const handleChangeRole = async (id: number, newRole: string) => {
     const res = await apiFetch(`/users/${id}/roles`, {
       method: "PUT",
@@ -105,6 +106,45 @@ export default function AdminUsersPage() {
       const { error } = await res.json();
       alert(error || "Failed to update role");
     }
+  };
+
+  // New: update roles with a full array (used for file_uploads grant/revoke)
+  const handleUpdateRoles = async (id: number, roles: string[]) => {
+    const res = await apiFetch(`/users/${id}/roles`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ roles }),
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, roles: updated.roles } : u))
+      );
+      setOpenMenuId(null);
+    } else {
+      const { error } = await res.json();
+      alert(error || "Failed to update roles");
+    }
+  };
+
+  const handleGrantFileUploads = (id: number) => {
+    const u = users.find((x) => x.id === id);
+    if (!u) return;
+    if (u.roles.includes("file_uploads")) return;
+    const newRoles = Array.from(new Set([...u.roles, "file_uploads"]));
+    handleUpdateRoles(id, newRoles);
+  };
+
+  const handleRevokeFileUploads = (id: number) => {
+    const u = users.find((x) => x.id === id);
+    if (!u) return;
+    if (!u.roles.includes("file_uploads")) return;
+    const newRoles = u.roles.filter((r) => r !== "file_uploads");
+    handleUpdateRoles(id, newRoles);
   };
 
   const handleSaveEmail = async (id: number) => {
@@ -138,7 +178,6 @@ export default function AdminUsersPage() {
       alert(error || "Failed to update email");
     }
   };
-
 
   const activeUsers = users.filter((u) => u.is_active);
   const inactiveUsers = users.filter((u) => !u.is_active);
@@ -208,15 +247,20 @@ export default function AdminUsersPage() {
                 <p className="font-medium">{user.email}</p>
               )}
               <div className="text-sm">
-                <span
-                  className={`inline-block px-2 py-0.5 text-xs rounded ${
-                    user.roles.includes("admin")
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
-                >
-                  {user.roles[0]}
-                </span>
+                {user.roles.map((role) => (
+                  <span
+                    key={role}
+                    className={`inline-block px-2 py-0.5 text-xs rounded mr-1 ${
+                      role === "admin"
+                        ? "bg-blue-100 text-blue-800"
+                        : role === "file_uploads"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {role}
+                  </span>
+                ))}
               </div>
               <p className="text-xs text-gray-400">
                 Created: {new Date(user.created_at).toLocaleString()}
@@ -229,7 +273,6 @@ export default function AdminUsersPage() {
                 menuRefs.current[user.id] = el;
               }}
             >
-
               <button
                 onClick={() =>
                   setOpenMenuId((prev) => (prev === user.id ? null : user.id))
@@ -239,7 +282,7 @@ export default function AdminUsersPage() {
                 <MoreVertical size={20} />
               </button>
               {openMenuId === user.id && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-10">
+                <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-md z-10">
                   {user.roles.includes("admin") ? (
                     <button
                       onClick={() => handleChangeRole(user.id, "user")}
@@ -254,6 +297,23 @@ export default function AdminUsersPage() {
                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-600"
                     >
                       Promote to Admin
+                    </button>
+                  )}
+
+                  {/* New: Grant/Revoke File Uploads */}
+                  {!user.roles.includes("file_uploads") ? (
+                    <button
+                      onClick={() => handleGrantFileUploads(user.id)}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-600"
+                    >
+                      Grant File Uploads
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleRevokeFileUploads(user.id)}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-blue-600"
+                    >
+                      Revoke File Uploads
                     </button>
                   )}
 
@@ -324,7 +384,6 @@ export default function AdminUsersPage() {
                     menuRefs.current[user.id] = el;
                   }}
                 >
-
                   <button
                     onClick={() =>
                       setOpenMenuId((prev) => (prev === user.id ? null : user.id))

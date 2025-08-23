@@ -317,3 +317,41 @@ class UserPreference(Base):
 
     def __repr__(self):
         return f"<UserPreference user_id={self.user_id} {self.category}.{self.preference_key}>"
+    
+
+class File(Base):
+    __tablename__ = "files"
+
+    id = Column(Integer, primary_key=True)
+    tenant_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    # Original name the user uploaded (safe to show in UI / as download name)
+    filename = Column(String(255), nullable=False)
+
+    # Internal stored filename (e.g., "<uuid>.ext"); helpful when using local disk
+    stored_name = Column(String(255), nullable=False)
+
+    # STORAGE-AGNOSTIC POINTER:
+    # - Local disk: absolute or normalized relative path (e.g., "./storage/12/<uuid>.pdf")
+    # - Backblaze B2: object key within the bucket (e.g., "tenant-12/<uuid>.pdf")
+    path = Column(String(1024), nullable=False, index=True)
+
+    size = Column(Integer, nullable=False)          # bytes
+    mimetype = Column(String(100), nullable=False)  # e.g., "application/pdf"
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    uploader = relationship("User", foreign_keys=[user_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.filename,
+            "size": self.size,
+            "uploadedBy": self.uploader.email if self.uploader else None,
+            "date": (self.uploaded_at.isoformat() + "Z") if self.uploaded_at else None,
+            "mimetype": self.mimetype,
+        }
+
+    def __repr__(self):
+        return f"<File id={self.id} tenant={self.tenant_id} name={self.filename}>"

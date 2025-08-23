@@ -24,6 +24,7 @@ import AdminImportPage from "./pages/AdminImportPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
 import TrashPage from "./pages/TrashPage";
+import Vault from "./pages/Vault";
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
           <Route path="/admin/import" element={<AdminImportPage />} />
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/trash" element={<TrashPage />} />
+          <Route path="/vault" element={<Vault />} />
         </Route>
         {/* Catch all */}
         <Route path="*" element={<NotFound />} />

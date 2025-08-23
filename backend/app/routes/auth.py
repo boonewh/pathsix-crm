@@ -12,6 +12,7 @@ from app.utils.auth_utils import (
 from app.utils.auth_utils import requires_auth
 from app.utils.email_utils import send_email
 
+
 auth_bp = Blueprint("auth", __name__, url_prefix="/api")
 
 @auth_bp.route("/login", methods=["POST"])
@@ -132,3 +133,14 @@ async def change_password():
         return jsonify({"error": "Server error"}), 500
     finally:
         session.close()
+
+
+@auth_bp.route("/me", methods=["GET"])
+@requires_auth()
+async def get_me():
+    user = request.user
+    return jsonify({
+        "id": user.id,
+        "email": user.email,
+        "roles": [r.name for r in user.roles]
+    })
