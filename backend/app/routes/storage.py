@@ -2,12 +2,14 @@
 import os
 import uuid
 from datetime import datetime
-from quart import Blueprint, request, jsonify, send_file, Response
+from quart import Blueprint, request, jsonify, send_file, Response, current_app
 from sqlalchemy.exc import SQLAlchemyError
 from app.database import SessionLocal
 from app.models import File
 from app.utils.auth_utils import requires_auth
 from app.utils.storage_backend import get_storage
+
+
 
 storage_bp = Blueprint("storage", __name__, url_prefix="/api/storage")
 
@@ -36,16 +38,19 @@ async def list_files():
 async def upload_files():
     user = request.user
     form = await request.files
-    if not form:
+
+    # Support multiple files under the same key "files"
+    items = form.getlist("files") if hasattr(form, "getlist") else list(form.values())
+    if not items:
         return jsonify({"error": "No files uploaded"}), 400
 
-    max_size = request.app.config.get("MAX_CONTENT_LENGTH", 20 * 1024 * 1024)  # 20MB default
+    max_size = current_app.config.get("MAX_CONTENT_LENGTH", 20 * 1024 * 1024)  # 20MB default
     storage = get_storage()
 
     session = SessionLocal()
     saved = []
     try:
-        for _, file in form.items():
+        for file in items:
             # Determine size (read into memory for MVP)
             file.stream.seek(0, os.SEEK_END)
             size = file.stream.tell()
@@ -58,13 +63,19 @@ async def upload_files():
             stored_name = f"{uuid.uuid4().hex}{ext}"
             key = _tenant_key(user.tenant_id, stored_name)
 
-            data = await file.read()
-            mimetype = file.mimetype or "application/octet-stream"
-            await storage.put_bytes(key, data, mimetype)
+            try:
+                data = await file.read()
+                mimetype = file.mimetype or "application/octet-stream"
+                await storage.put_bytes(key, data, mimetype)
 
-            # Persist: for local we store absolute path; for S3 we store the key
-            local_path = await storage.local_path_for(key)
-            stored_path = local_path if local_path else key
+                # Persist: for local we store absolute path; for S3 we store the key
+                local_path = await storage.local_path_for(key)
+                stored_path = local_path if local_path else key
+            except Exception as e:
+                session.rollback()
+                return jsonify(
+                    {"error": f"Storage error: {type(e).__name__}", "detail": str(e)}
+                ), 500
 
             rec = File(
                 tenant_id=user.tenant_id,
