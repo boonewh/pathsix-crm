@@ -1,50 +1,62 @@
 // src/api/storage.ts
+const BASE = (import.meta.env.VITE_API_BASE_URL as string) || "";
 
-const BASE = import.meta.env.VITE_VAULT_API_BASE || ""; // "" = same origin
-
-
-function authHeaders(token: string) {
-  if (!token) throw new Error("Not authenticated");
-  return { Authorization: `Bearer ${token}` };
+function join(base: string, path: string) {
+  const b = base.replace(/\/+$/, "");
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${b}${p}`;
 }
 
-export async function listFiles(token: string) {
-  const res = await fetch(`${BASE}/api/storage/list`, {
-    headers: authHeaders(token),
+export type FileInfo = {
+  id: number;
+  name: string;
+  size: number;
+  uploadedBy: string;
+  date: string;
+  mimetype?: string;
+};
+
+export async function listFiles(token: string): Promise<FileInfo[]> {
+  const res = await fetch(join(BASE, "/storage/list"), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
     credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to list files");
   return res.json();
 }
 
-export async function uploadFiles(files: File[], token: string) {
-  const fd = new FormData();
-  files.forEach((f) => fd.append("file", f));
-  const res = await fetch(`${BASE}/api/storage/upload`, {
+export async function uploadFiles(files: File[], token: string): Promise<void> {
+  const form = new FormData();
+  files.forEach((f) => form.append("files", f));
+
+  const res = await fetch(join(BASE, "/storage/upload"), {
     method: "POST",
-    headers: authHeaders(token),
-    body: fd,
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
     credentials: "include",
   });
-  if (!res.ok) throw new Error("Upload failed");
-  return res.json();
+  if (!res.ok) throw new Error("Failed to upload files");
 }
 
-export async function deleteFile(id: number, token: string) {
-  const res = await fetch(`${BASE}/api/storage/delete/${id}`, {
+export async function deleteFile(id: number, token: string): Promise<void> {
+  const res = await fetch(join(BASE, `/storage/delete/${id}`), {
     method: "DELETE",
-    headers: authHeaders(token),
+    headers: { Authorization: `Bearer ${token}` },
     credentials: "include",
   });
-  if (!res.ok) throw new Error("Delete failed");
-  return res.json();
+  if (!res.ok) throw new Error("Failed to delete file");
 }
 
 export async function downloadFile(id: number, token: string): Promise<Blob> {
-  const res = await fetch(`${BASE}/api/storage/download/${id}`, {
-    headers: authHeaders(token),
+  const res = await fetch(join(BASE, `/storage/download/${id}`), {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
     credentials: "include",
   });
-  if (!res.ok) throw new Error("Download failed");
+  if (!res.ok) throw new Error("Failed to download file");
   return res.blob();
 }
