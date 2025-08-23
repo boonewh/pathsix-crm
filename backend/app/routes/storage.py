@@ -8,6 +8,7 @@ from app.database import SessionLocal
 from app.models import File
 from app.utils.auth_utils import requires_auth
 from app.utils.storage_backend import get_storage
+import inspect
 
 
 
@@ -64,7 +65,7 @@ async def upload_files():
             key = _tenant_key(user.tenant_id, stored_name)
 
             try:
-                data = await file.read()
+                data = file.read()
                 mimetype = file.mimetype or "application/octet-stream"
                 await storage.put_bytes(key, data, mimetype)
 
