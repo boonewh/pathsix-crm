@@ -39,7 +39,7 @@ def create_app():
     app.config.from_pyfile("config.py")
     app.config.setdefault("STORAGE_ROOT", "./storage")
     app.config.setdefault("MAX_CONTENT_LENGTH", 20 * 1024 * 1024)  # 20 MB
-    app.config.setdefault("STORAGE_PROVIDER", "disk")  # "disk" | "b2"
+    app.config.setdefault("STORAGE_VENDOR", "disk")  # "disk" | "b2"
     register_blueprints(app)
 
     #✅ Before serving: warm up DB, then start keep-alive
