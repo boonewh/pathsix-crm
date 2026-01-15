@@ -23,6 +23,8 @@ export default function AdminUsersPage() {
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [editingUserId, setEditingUserId] = useState<number | null>(null);
   const [editedEmail, setEditedEmail] = useState<string>("");
+  const [settingPasswordUserId, setSettingPasswordUserId] = useState<number | null>(null);
+  const [tempPassword, setTempPassword] = useState<string>("");
 
   useEffect(() => {
     apiFetch("/users/", {
@@ -179,6 +181,32 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleSetPassword = async (id: number) => {
+    if (tempPassword.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    const res = await apiFetch(`/users/${id}/set-password`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: tempPassword }),
+    });
+
+    if (res.ok) {
+      alert("Temporary password set successfully. User can now log in with this password.");
+      setSettingPasswordUserId(null);
+      setTempPassword("");
+      setOpenMenuId(null);
+    } else {
+      const { error } = await res.json();
+      alert(error || "Failed to set password");
+    }
+  };
+
   const activeUsers = users.filter((u) => u.is_active);
   const inactiveUsers = users.filter((u) => !u.is_active);
 
@@ -245,6 +273,26 @@ export default function AdminUsersPage() {
                 />
               ) : (
                 <p className="font-medium">{user.email}</p>
+              )}
+              {settingPasswordUserId === user.id && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    placeholder="Enter temporary password (min 6 chars)"
+                    value={tempPassword}
+                    onChange={(e) => setTempPassword(e.target.value)}
+                    className="border px-2 py-1 rounded w-full text-sm"
+                  />
+                  <button
+                    onClick={() => {
+                      setSettingPasswordUserId(null);
+                      setTempPassword("");
+                    }}
+                    className="text-xs text-gray-500 hover:text-gray-700 mt-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
               )}
               <div className="text-sm">
                 {user.roles.map((role) => (
@@ -339,6 +387,25 @@ export default function AdminUsersPage() {
                       className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-indigo-600"
                     >
                       Edit Email
+                    </button>
+                  )}
+
+                  {settingPasswordUserId === user.id ? (
+                    <button
+                      onClick={() => handleSetPassword(user.id)}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-green-600"
+                    >
+                      Save Password
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSettingPasswordUserId(user.id);
+                        setTempPassword("");
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-orange-600"
+                    >
+                      Set Password
                     </button>
                   )}
                 </div>

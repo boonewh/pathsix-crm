@@ -175,3 +175,38 @@ async def update_user_email(user_id):
 
     finally:
         session.close()
+
+@users_bp.route("/<int:user_id>/set-password", methods=["PUT"])
+@requires_auth(roles=["admin"])
+async def set_user_password(user_id):
+    """Admin endpoint to set a temporary password for a user."""
+    user = request.user
+    data = await request.get_json()
+    session = SessionLocal()
+    try:
+        target = session.query(User).filter(
+            User.id == user_id,
+            User.tenant_id == user.tenant_id
+        ).first()
+
+        if not target:
+            return jsonify({"error": "User not found"}), 404
+
+        new_password = data.get("password")
+        if not new_password:
+            return jsonify({"error": "Password is required"}), 400
+
+        if len(new_password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+        target.password_hash = hash_password(new_password)
+        session.commit()
+
+        return jsonify({
+            "message": "Password updated successfully",
+            "user_id": target.id,
+            "email": target.email
+        })
+
+    finally:
+        session.close()
