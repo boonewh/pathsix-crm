@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE } from "../lib/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -9,17 +10,21 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("/api/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    if (res.ok) {
-      setSent(true);
-    } else {
-      const data = await res.json();
-      setError(data.error || "Something went wrong");
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Something went wrong");
+      }
+    } catch {
+      setError("Unable to connect to server. Please try again.");
     }
   };
 
