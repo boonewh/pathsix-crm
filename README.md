@@ -1,3 +1,18 @@
+# Retired legacy CRM
+
+Retired October 30, 2026. This historical monorepo is archived; its old frontend at `pathsixold-crm.vercel.app` is paused.
+
+Maintained repositories:
+
+- [Current CRM frontend](https://github.com/boonewh/pathsixdesigns-crm), live at https://pathsix-crm.vercel.app
+- [Current CRM backend](https://github.com/boonewh/pathsix-backend), deployed as Fly app `pathsixsolutions-backend`
+
+Do not deploy this old monorepo or run its reset, seed or migration scripts against the current CRM. Its historical Fly configuration names the separate `pathsix-backend` app; that stopped service, all databases, files and volumes were left unchanged. Source and Git history remain available for reference.
+
+---
+
+## Historical documentation
+
 # PathSix CRM - Feature Documentation
 
 ## User Instructions
